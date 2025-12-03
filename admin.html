@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后端服务器管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2F2F2F;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            color: #2F2F2F;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .password-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .password-section input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            margin-right: 10px;
+            width: 200px;
+        }
+        
+        .password-section button {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .password-section button:hover {
+            background: #5568d3;
+        }
+        
+        .add-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+        }
+        
+        .add-section h3 {
+            margin-bottom: 15px;
+            color: #2F2F2F;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2F2F2F;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-add {
+            padding: 10px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .btn-add:hover {
+            background: #5568d3;
+        }
+        
+        .servers-list {
+            margin-top: 30px;
+        }
+        
+        .servers-list h3 {
+            margin-bottom: 15px;
+            color: #2F2F2F;
+        }
+        
+        .server-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .server-info {
+            flex: 1;
+        }
+        
+        .server-info strong {
+            color: #2F2F2F;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .server-info span {
+            color: #666;
+            font-size: 12px;
+            display: block;
+            margin-top: 3px;
+        }
+        
+        .server-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .server-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-toggle, .btn-delete {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-toggle {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-toggle.disabled {
+            background: #6c757d;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-toggle:hover, .btn-delete:hover {
+            opacity: 0.8;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 后端服务器管理</h1>
+        <p class="subtitle">管理和配置所有后端服务器连接</p>
+        
+        <div id="message" class="message"></div>
+        
+        <!-- 密码保护（可选） -->
+        <div id="passwordSection" class="password-section">
+            <label>访问密码（可选，留空则无需密码）：</label>
+            <input type="password" id="passwordInput" placeholder="输入密码">
+            <button onclick="checkPassword()">验证</button>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div id="mainContent" class="hidden">
+            <!-- 添加服务器 -->
+            <div class="add-section">
+                <h3>➕ 添加后端服务器</h3>
+                <div class="form-group">
+                    <label>服务器名称（标识）:</label>
+                    <input type="text" id="serverName" placeholder="例如: MacBook-Pro-1">
+                </div>
+                <div class="form-group">
+                    <label>WebSocket 地址:</label>
+                    <input type="text" id="serverUrl" placeholder="例如: ws://example.com:10005/ws 或 wss://example.com:10005/ws">
+                </div>
+                <button class="btn-add" onclick="addServer()">添加服务器</button>
+            </div>
+            
+            <!-- 服务器列表 -->
+            <div class="servers-list">
+                <h3>📡 已配置的服务器</h3>
+                <div id="serversList">
+                    <div class="empty-state">暂无服务器，请添加</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 配置密码（留空则无需密码）
+        const ADMIN_PASSWORD = '';
+        const CONFIG_FILE = 'backend-config.json';
+        
+        let isAuthenticated = !ADMIN_PASSWORD;
+        let configData = { backend_servers: [], last_updated: '' };
+        
+        // 检查密码
+        function checkPassword() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === ADMIN_PASSWORD || !ADMIN_PASSWORD) {
+                isAuthenticated = true;
+                document.getElementById('passwordSection').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                loadConfig();
+            } else {
+                showMessage('密码错误', 'error');
+            }
+        }
+        
+        // 如果不需要密码，直接显示
+        if (!ADMIN_PASSWORD) {
+            document.getElementById('passwordSection').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+        
+        // 加载配置
+        async function loadConfig() {
+            try {
+                const response = await fetch(CONFIG_FILE + '?t=' + Date.now());
+                if (response.ok) {
+                    configData = await response.json();
+                    renderServers();
+                    checkServerStatus();
+                } else {
+                    // 如果文件不存在，创建默认配置
+                    configData = { backend_servers: [], last_updated: new Date().toISOString() };
+                    saveConfig();
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                showMessage('加载配置失败，请确保配置文件存在', 'error');
+            }
+        }
+        
+        // 保存配置
+        async function saveConfig() {
+            configData.last_updated = new Date().toISOString();
+            try {
+                // 如果部署在GitHub Pages，需要使用GitHub API或后端API来保存
+                // 这里假设有后端API支持
+                const response = await fetch('/api/save-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(configData)
+                });
+                
+                if (!response.ok) {
+                    // 如果没有后端API，尝试使用localStorage作为临时存储
+                    localStorage.setItem('backend-config', JSON.stringify(configData));
+                    showMessage('配置已保存到本地存储（需要后端API支持持久化）', 'success');
+                } else {
+                    showMessage('配置已保存', 'success');
+                }
+                renderServers();
+            } catch (error) {
+                // 降级到localStorage
+                localStorage.setItem('backend-config', JSON.stringify(configData));
+                showMessage('配置已保存到本地存储（需要后端API支持持久化）', 'success');
+                renderServers();
+            }
+        }
+        
+        // 添加服务器
+        function addServer() {
+            const name = document.getElementById('serverName').value.trim();
+            const url = document.getElementById('serverUrl').value.trim();
+            
+            if (!name || !url) {
+                showMessage('请填写服务器名称和地址', 'error');
+                return;
+            }
+            
+            if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+                showMessage('WebSocket地址必须以 ws:// 或 wss:// 开头', 'error');
+                return;
+            }
+            
+            // 检查是否已存在
+            if (configData.backend_servers.some(s => s.url === url)) {
+                showMessage('该服务器地址已存在', 'error');
+                return;
+            }
+            
+            configData.backend_servers.push({
+                id: Date.now().toString(),
+                name: name,
+                url: url,
+                enabled: true,
+                last_seen: null,
+                registered_at: new Date().toISOString()
+            });
+            
+            document.getElementById('serverName').value = '';
+            document.getElementById('serverUrl').value = '';
+            saveConfig();
+        }
+        
+        // 渲染服务器列表
+        function renderServers() {
+            const list = document.getElementById('serversList');
+            if (configData.backend_servers.length === 0) {
+                list.innerHTML = '<div class="empty-state">暂无服务器，请添加</div>';
+                return;
+            }
+            
+            list.innerHTML = configData.backend_servers.map(server => `
+                <div class="server-item">
+                    <div class="server-info">
+                        <strong>${server.name}</strong>
+                        <span>${server.url}</span>
+                        <span style="color: #999; font-size: 11px;">
+                            添加时间: ${new Date(server.registered_at).toLocaleString()}
+                            ${server.last_seen ? ' | 最后活跃: ' + new Date(server.last_seen).toLocaleString() : ''}
+                        </span>
+                    </div>
+                    <div class="server-status ${server.last_seen && (Date.now() - new Date(server.last_seen).getTime() < 60000) ? 'status-online' : 'status-offline'}">
+                        ${server.last_seen && (Date.now() - new Date(server.last_seen).getTime() < 60000) ? '在线' : '离线'}
+                    </div>
+                    <div class="server-actions">
+                        <button class="btn-toggle ${server.enabled ? '' : 'disabled'}" onclick="toggleServer('${server.id}')">
+                            ${server.enabled ? '启用' : '禁用'}
+                        </button>
+                        <button class="btn-delete" onclick="deleteServer('${server.id}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 切换服务器状态
+        function toggleServer(id) {
+            const server = configData.backend_servers.find(s => s.id === id);
+            if (server) {
+                server.enabled = !server.enabled;
+                saveConfig();
+            }
+        }
+        
+        // 删除服务器
+        function deleteServer(id) {
+            if (confirm('确定要删除这个服务器吗？')) {
+                configData.backend_servers = configData.backend_servers.filter(s => s.id !== id);
+                saveConfig();
+            }
+        }
+        
+        // 检查服务器状态
+        async function checkServerStatus() {
+            for (const server of configData.backend_servers) {
+                if (!server.enabled) continue;
+                
+                try {
+                    const ws = new WebSocket(server.url);
+                    await new Promise((resolve, reject) => {
+                        ws.onopen = () => {
+                            server.last_seen = new Date().toISOString();
+                            ws.close();
+                            resolve();
+                        };
+                        ws.onerror = () => reject();
+                        setTimeout(() => reject(), 3000);
+                    });
+                } catch (error) {
+                    // 连接失败，不更新last_seen
+                }
+            }
+            renderServers();
+        }
+        
+        // 显示消息
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 页面加载时
+        if (isAuthenticated) {
+            loadConfig();
+            // 每30秒检查一次服务器状态
+            setInterval(checkServerStatus, 30000);
+        }
+    </script>
+</body>
+</html>
+

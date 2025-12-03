@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <title>AutoSender Pro</title>
+    <style>
+        @font-face {
+            font-family: 'Xiaolai';
+            src: url('./test/Xiaolai.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            /* A版配色 - 暖黄色系 */
+            --a-yellow: #FFE082;
+            --a-orange: #FFECB3;
+            --a-peach: #FFE0B2;
+            --a-cream: #FFF3E0;
+            --a-beige: #F5F5DC;
+
+            /* B版配色 - 暖绿色系 */
+            --b-green: #DCEDC8;
+            --b-light-green: #E8F5E9;
+            --b-mint: #C8E6C9;
+            --b-pale-green: #F1F8E9;
+
+            /* 收件箱配色 - 暖蓝色系 */
+            --c-blue: #B3E5FC;
+            --c-light-blue: #E1F5FE;
+            --c-sky: #81D4FA;
+            --c-pale-blue: #E0F2F1;
+
+            --text-dark: #2F2F2F;
+            --border-dark: #2F2F2F;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 全局字体设置 - 只使用 Xiaolai */
+        *,
+        *::before,
+        *::after {
+            font-family: 'Xiaolai', sans-serif !important;
+        }
+
+        /* textarea 和 log-box 也使用 Xiaolai */
+        textarea,
+        .log-box,
+        #numbersText,
+        #messageText {
+            font-family: 'Xiaolai', sans-serif !important;
+        }
+
+        textarea::placeholder {
+            font-family: 'Xiaolai', sans-serif !important;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: var(--a-cream);
+            font-family: 'Xiaolai', sans-serif;
+            color: var(--text-dark);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* 主容器 - 固定尺寸 */
+        .main-container {
+            display: flex;
+            gap: 10px;
+            width: 1300px;
+            height: 580px;
+            position: relative;
+            max-width: 100vw;
+            max-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 工作区A+B */
+        .workspace-ab {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* A版面板 */
+        .panel-a {
+            width: 750px;
+            height: 580px;
+            background: var(--a-beige);
+            border-radius: 18px;
+            border: 3px solid var(--border-dark);
+            box-shadow: 0 4px 12px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .panel-a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--shadow);
+        }
+
+        /* B版面板 */
+        .panel-b {
+            flex: 1;
+            background: var(--b-pale-green);
+            border-radius: 18px;
+            border: 3px solid var(--border-dark);
+            box-shadow: 0 4px 12px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-width: 380px;
+            position: relative;
+        }
+
+        .panel-b:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--shadow);
+        }
+
+        /* 收件箱面板 */
+        .panel-c {
+            width: 100%;
+            height: 100%;
+            background: var(--c-pale-blue);
+            border-radius: 18px;
+            border: 3px solid var(--border-dark);
+            box-shadow: 0 4px 12px var(--shadow);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-sizing: border-box;
+        }
+
+        /* 统一标题栏 */
+        .panel-header {
+            height: 35px;
+            padding: 0 15px;
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--text-dark);
+            border-bottom: 3px solid var(--border-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .panel-a .panel-header {
+            background: var(--a-yellow);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .panel-b .panel-header {
+            background: var(--b-mint);
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        .panel-c .panel-header {
+            background: var(--c-sky);
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        /* 内容区域 - 统一边距 */
+        .panel-content {
+            padding: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* A版内容区域 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        /* A版输入区域 */
+        .numbers-container {
+            width: 380px;
+            min-width: 380px;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            background: var(--a-peach);
+            border: 2px solid var(--border-dark);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .message-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--a-orange);
+            border: 2px solid var(--border-dark);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .input-header {
+            padding: 8px 12px;
+            border-bottom: 2px solid var(--border-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .input-title {
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border-dark);
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-dark);
+            font-family: 'Xiaolai', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-icon:hover {
+            background: linear-gradient(135deg, rgba(139, 0, 255, 0.15), rgba(139, 0, 255, 0.1));
+            border-color: #8B00FF;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 8px rgba(139, 0, 255, 0.2);
+        }
+
+        .btn-icon:active {
+            transform: translateY(0) scale(0.95);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+            border-color: var(--border-dark) !important;
+        }
+
+        /* 修复移动端点击后高亮不消失的问题 */
+        .btn-icon:focus {
+            outline: none;
+        }
+
+        .btn-icon:focus:not(:active) {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+            border-color: var(--border-dark) !important;
+            transform: none !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* 移动端强制恢复样式 */
+        @media (max-width: 768px) {
+            .btn-icon:active {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+                border-color: var(--border-dark) !important;
+            }
+            .btn-icon:focus {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+                border-color: var(--border-dark) !important;
+            }
+        }
+
+        .btn-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .input-area {
+            flex: 1;
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-dark);
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+        /* 号码输入框使用 Xiaolai */
+        #numbersText {
+            font-size: 18px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .char-count {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 11px;
+            color: rgba(47, 47, 47, 0.6);
+            background: rgba(255, 255, 255, 0.7);
+            padding: 3px 8px;
+            font-weight: bold;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 号码计数器 - 0时黑色，大于0时绿色 */
+        #numbersCount.has-numbers {
+            color: #4CAF50;
+        }
+
+        /* 消息计数器 - 0时黑色，大于0且小于等于160时绿色 */
+        #messageCount.has-content {
+            color: #4CAF50;
+        }
+
+        /* 消息计数器 - 超过160时红色 */
+        #messageCount.over-limit {
+            color: #F44336;
+        }
+
+        /* 条数标签 - 圆圈背景 */
+        .message-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 20px;
+            padding: 0 6px;
+            background: linear-gradient(135deg, #FF9800, #FF6B35);
+            color: white;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+        }
+
+        /* A版控制区域 */
+        .control-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-top: 10px;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .interval-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .interval-label {
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .interval-select {
+            padding: 5px 8px;
+            border: 2px solid var(--border-dark);
+            border-radius: 6px;
+            background: var(--a-beige);
+            color: var(--text-dark);
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .interval-select option {
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+            color: var(--text-dark);
+            /* 下拉列表中的选项保持黑色 */
+            background: white;
+        }
+
+        /* 选中值的颜色显示 - 只改变显示的值，不改变下拉选项 */
+        .interval-select[data-value="0.3"] {
+            color: #F44336;
+            /* 红色 */
+            font-weight: 900;
+        }
+
+        .interval-select[data-value="0.7"] {
+            color: #FF8A80;
+            /* 浅红色 */
+            font-weight: 900;
+        }
+
+        .interval-select[data-value="1.0"] {
+            color: #4CAF50;
+            /* 绿色 */
+            font-weight: 900;
+        }
+
+        .interval-select[data-value="1.5"] {
+            color: #FFE082;
+            /* 浅黄色 */
+            font-weight: 900;
+        }
+
+        .interval-select[data-value="2.0"] {
+            color: #FFC107;
+            /* 黄色 */
+            font-weight: 900;
+        }
+
+        .interval-select:hover {
+            border-color: #8B00FF;
+            transform: translateY(-1px);
+        }
+
+        /* 发送按钮 - 新颜色 */
+        .btn-send {
+            padding: 6px 20px;
+            border: 2px solid var(--border-dark);
+            border-radius: 20px;
+            background: #9775fa;
+            color: white;
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(151, 117, 250, 0.3);
+            height: auto;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(151, 117, 250, 0.4);
+            background: #8565e8;
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* B版日志区域 */
+        .log-box {
+            flex: 1;
+            background: var(--b-light-green);
+            border: 2px solid var(--border-dark);
+            border-radius: 10px;
+            padding: 10px;
+            padding-bottom: 60px;
+            overflow-y: auto;
+            font-size: 14px;
+            color: var(--text-dark);
+            position: relative;
+        }
+
+        .log-item {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed rgba(47, 47, 47, 0.2);
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--b-green);
+            border-radius: 8px;
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .stat-item {
+            font-family: 'Xiaolai', sans-serif;
+            color: var(--text-dark);
+        }
+
+        .stat-value {
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+            font-size: 12;
+            margin-left: 3px;
+        }
+
+        /* 任务次数 - 紫色 */
+        #taskCount {
+            color: #9C27B0;
+        }
+
+        /* 用时 - 蓝色 */
+        #timeUsed {
+            color: #2196F3;
+        }
+
+        /* 成功数量 - 绿色 */
+        #successCount {
+            color: #4CAF50;
+        }
+
+        /* 失败数量 - 浅红色（不要太红） */
+        #failCount {
+            color: #FF8A80;
+        }
+
+        /* 成功率 - 喜庆的橙色 */
+        #successRate {
+            color: #FF9800;
+        }
+
+        /* 锚点触发器 */
+        .anchor-trigger {
+            position: absolute;
+            bottom: clamp(-6px, -0.8vh, -8px);
+            right: clamp(-12px, -1.5vw, -15px);
+            width: clamp(16px, 2vw, 20px);
+            height: clamp(16px, 2vw, 20px);
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            touch-action: manipulation;
+        }
+
+        .anchor-trigger::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-bottom: 2px solid rgba(0, 255, 65, 0.7);
+            border-right: 2px solid rgba(0, 255, 65, 0.7);
+            transition: 0.2s;
+        }
+
+        .anchor-trigger:hover::before {
+            width: 14px;
+            height: 14px;
+            border-color: var(--hacker-green);
+        }
+
+        .textarea-wrapper.expanded~.anchor-trigger::before,
+        .log-wrapper.expanded~.anchor-trigger::before {
+            width: 14px;
+            height: 14px;
+            border-color: var(--hacker-green);
+        }
+
+        .textarea-wrapper.locked~.anchor-trigger::before,
+        .log-wrapper.locked~.anchor-trigger::before {
+            border-color: var(--hacker-green);
+        }
+
+        #logTrigger {
+            bottom: -4px;
+            right: -10px;
+        }
+
+        /* 切换按钮 - 桌面端放在右上角 */
+        .inbox-toggle-btn {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #81D4FA, #4FC3F7);
+            border: 2px solid var(--border-dark);
+            color: white;
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(129, 212, 250, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .inbox-toggle-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(129, 212, 250, 0.6);
+        }
+
+        /* 在收件箱页面时的按钮背景颜色 */
+        .inbox-toggle-btn.in-inbox {
+            background: linear-gradient(135deg, #FF9800, #FF6B35);
+            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.4);
+        }
+
+        .inbox-toggle-btn.in-inbox:hover {
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.6);
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 10px;
+            display: none;
+            /* 默认隐藏 */
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* 当有未读消息时显示 */
+        .notification-count.has-unread {
+            display: flex;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 收件箱样式 */
+        .inbox-layout {
+            display: flex;
+            height: 100%;
+            gap: 10px;
+        }
+
+        .contact-list {
+            width: 250px;
+            min-width: 200px;
+            border-right: 2px solid var(--border-dark);
+            padding-right: 10px;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--c-light-blue);
+            position: relative;
+        }
+
+        .contact-item:hover {
+            background: rgba(129, 212, 250, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .contact-item.active {
+            background: rgba(129, 212, 250, 0.5);
+            border: 3px solid var(--border-dark);
+        }
+
+        /* 未读消息标记 */
+        .contact-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #FF6B6B;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(255, 107, 107, 0.6);
+            z-index: 1;
+        }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(129, 212, 250, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-name {
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .contact-preview {
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 11px;
+            color: rgba(47, 47, 47, 0.7);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .chat-header {
+            padding: 10px;
+            border-bottom: 2px solid var(--border-dark);
+            margin-bottom: 10px;
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .chat-header .phone-number {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #c5db53;
+            border-radius: 8px;
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+        }
+
+        .chat-display {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border: 2px solid var(--border-dark);
+            border-radius: 10px;
+            background: var(--c-light-blue);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .chat-bubble.left {
+            align-self: flex-start;
+            background: #FFFFFF;
+            border: 2px solid var(--border-dark);
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+
+        .chat-bubble.right {
+            align-self: flex-end;
+            background: #1F8AFF;
+            color: white;
+            border: 2px solid var(--border-dark);
+        }
+
+        .chat-time {
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .reply-bar {
+            display: flex;
+            gap: 8px;
+        }
+
+        .reply-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid var(--border-dark);
+            border-radius: 18px;
+            outline: none;
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 18px;
+            color: var(--text-dark);
+            background: var(--c-light-blue);
+            transition: all 0.2s;
+        }
+
+        .reply-input::placeholder {
+            font-family: 'Xiaolai', sans-serif;
+        }
+
+        .reply-input:focus {
+            border-color: #0213f7;
+            box-shadow: 0 0 0 2px rgba(129, 212, 250, 0.2);
+        }
+
+        .btn-send-reply {
+            padding: 8px 24px;
+            border: 2px solid var(--border-dark);
+            border-radius: 18px;
+            background: #ff8a80;
+            color: var(--text-dark);
+            font-family: 'Xiaolai', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-send-reply:hover:not(:disabled) {
+            background: #ff0089;
+            color: var(--text-dark);
+            border: 2px solid var(--border-dark);
+            border-color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .btn-send-reply:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+
+            /* 整体容器：AB 一页，竖向 3:2 布局 */
+            body {
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .main-container {
+                flex-direction: column;
+                width: 100vw;
+                height: 100vh;
+                /* 固定整屏高度 */
+                padding: 8px;
+                box-sizing: border-box;
+                gap: 6px;
+                max-height: 670px;
+                /* 限制最大高度 */
+                overflow: hidden;
+                /* 防止溢出 */
+            }
+
+            /* AB 页：上下 3:2 */
+            .workspace-ab {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                height: 100%;
+                gap: 6px;
+            }
+
+            .panel-a {
+                width: 100%;
+                flex: 3;
+                /* 3 份 */
+                min-height: 0;
+                border-radius: 12px;
+            }
+
+            .panel-b {
+                width: 100%;
+                flex: 2;
+                /* 2 份 */
+                min-height: 0;
+                border-radius: 12px;
+                margin-bottom: 2px;
+                /* 底部一点点边距 */
+            }
+
+            /* A 板内部：左右平分号码/内容 */
+            .content-area {
+                display: flex;
+                flex-direction: row;
+                gap: 6px;
+                height: calc(100% - 40px);
+                /* 去掉标题+按钮条的大概高度 */
+            }
+
+            .numbers-container,
+            .message-container {
+                width: 50%;
+                min-width: 0;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .input-area {
+                flex: 1;
+                min-height: 0;
+            }
+
+            textarea {
+                height: 100%;
+                box-sizing: border-box;
+                resize: none;
+                padding: 10px;
+                font-size: 18px;
+            }
+
+            /* 发送间隔 + 发送按钮条保持在 A 板底部 */
+            .control-bar {
+                padding: 4px 8px 0 8px;
+                gap: 8px;
+                margin-top: 4px;
+                display: flex;
+                align-items: center;
+            }
+
+            .inbox-toggle-btn {
+                position: fixed;
+                top: 395px;
+                left: 345px;
+
+                width: 45px;
+                height: 35px;
+                font-size: 30px;
+                z-index: 10000;
+                background: linear-gradient(135deg, #81D4FA, #4FC3F7);
+                border: 2px solid var(--border-dark);
+                color: white;
+                border-radius: 35%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .panel-c {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                height: 100%;
+                min-height: 0;
+                border-radius: 12px;
+                border: 3px solid var(--border-dark);
+                box-shadow: 0 4px 12px var(--shadow);
+                display: none;
+                box-sizing: border-box;
+                position: relative;
+                top: auto;
+                left: auto;
+                z-index: 9999;
+            }
+
+
+
+            .panel-c.mobile-show {
+                display: flex !important;
+                flex-direction: column;
+            }
+
+            .workspace-ab.mobile-hide {
+                display: none !important;
+            }
+
+            .panel-c .panel-header {
+                border-radius: 12px 12px 0 0;
+                position: relative;
+                height: 35px;
+                padding: 0 15px;
+            }
+
+            .panel-c .panel-content {
+                flex: 1;
+                padding: 10px;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            .panel-c .inbox-layout {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                gap: 0;
+                min-height: 0;
+            }
+
+            .panel-c .contact-list {
+                width: 100%;
+                flex: 3;
+                min-height: 200px;
+                border-right: none;
+                border: 2px solid var(--border-dark);
+                border-radius: 8px;
+                border-bottom: 2px solid var(--border-dark);
+                padding-right: 0;
+                padding-bottom: 10px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+
+            }
+
+
+
+            .panel-c .chat-area {
+                flex: 3;
+                /* 自动占据剩余60%高度 */
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            /* 防止输入框聚焦时改变布局 */
+            textarea:focus,
+            input:focus {
+                transform: none !important;
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            /* 禁用页面缩放和输入框自动缩放 */
+            textarea,
+            input {
+                font-size: 11px !important;
+                transform: none !important;
+                -webkit-appearance: none;
+                appearance: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* 防止iOS Safari自动缩放 */
+            @supports (-webkit-touch-callout: none) {
+                textarea,
+                input {
+                    font-size: 16px !important;
+                }
+            }
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 连接状态 - 放在A板子标题栏最右边 */
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 2px solid var(--border-dark);
+            background: rgba(255, 255, 255, 0.95);
+            font-family: 'Xiaolai', sans-serif;
+            white-space: nowrap;
+        }
+
+        .status-connected {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .status-disconnected {
+            background: #FF8A80;
+            color: white;
+            border-color: #FF8A80;
+            font-weight: bold;
+        }
+
+        /* 清空日志按钮 - 放在日志容器右下角 */
+        .btn-clear-logs {
+            position: absolute;
+            bottom: 57px;
+            right: 14px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 2px solid var(--border-dark);
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--text-dark);
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-clear-logs:hover {
+            background: rgba(139, 0, 255, 0.15);
+            border-color: #8B00FF;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 0, 255, 0.2);
+        }
+
+        /* 动态气泡提醒 */
+        .message-bubble-notification {
+            position: fixed;
+            right: -300px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(129, 212, 250, 0.9), rgba(129, 212, 250, 0.7));
+            border: 2px solid var(--border-dark);
+            border-radius: 20px;
+            padding: 12px 18px;
+            color: var(--text-dark);
+            font-family: 'Xiaolai', sans-serif;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: slideInBubble 0.5s ease-out forwards, fadeOutBubble 0.5s ease-in 2.5s forwards;
+        }
+
+        @keyframes slideInBubble {
+            0% {
+                right: -300px;
+                opacity: 0;
+            }
+
+            100% {
+                right: 20px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOutBubble {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-50%) scale(0.9);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- 工作区A+B -->
+        <div class="workspace-ab" id="workspaceAB">
+            <!-- A版面板 -->
+            <div class="panel-a">
+                <div class="panel-header">
+                    <span>AutoSender Pro</span>
+                    <div class="connection-status" id="connectionStatus"><span>连接中...</span></div>
+                </div>
+
+                <div class="panel-content">
+                    <div class="content-area">
+                        <!-- 左侧号码输入框 -->
+                        <div class="numbers-container">
+                            <div class="input-header">
+                                <div class="input-title">发送号码</div>
+                                <div class="input-actions">
+                                    <button class="btn-icon" id="importNumbersBtn" title="导入">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+                                        </svg>
+                                    </button>
+                                    <button class="btn-icon" id="clearNumbersBtn" title="清空">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-area">
+                                <textarea id="numbersText" placeholder="输入目标号码，每行一个"></textarea>
+                                <div class="char-count" id="numbersCount">号码: 0</div>
+                            </div>
+                            <!-- 延长按钮 -->
+                            <div class="anchor-trigger" id="numTrigger"></div>
+                        </div>
+
+                        <!-- 右侧消息输入框 -->
+                        <div class="message-container">
+                            <div class="input-header">
+                                <div class="input-title">发送内容</div>
+                                <div class="input-actions">
+                                    <button class="btn-icon" id="importMessageBtn" title="导入">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+                                        </svg>
+                                    </button>
+                                    <button class="btn-icon" id="clearMessageBtn" title="清空">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-area">
+                                <textarea id="messageText" placeholder="输入要发送的消息内容"></textarea>
+                                <div class="char-count" id="messageCount">字符: 0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-bar">
+                        <div class="interval-control">
+                            <span class="interval-label">发送间隔:</span>
+                            <select class="interval-select" id="intervalInput">
+                                <option value="0.3">0.3s</option>
+                                <option value="0.7">0.7s</option>
+                                <option value="1.0" selected>1.0s</option>
+                                <option value="1.5">1.5s</option>
+                                <option value="2.0">2.0s</option>
+                            </select>
+                        </div>
+                        <button class="btn-send" id="sendBtn">发送</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B版面板 -->
+            <div class="panel-b">
+                <div class="panel-header">
+                    <span>任务日志</span>
+                </div>
+                <div class="panel-content" style="position: relative;">
+                    <div class="log-box" id="statusList">
+                        <!-- 日志内容将通过JavaScript动态添加 -->
+                    </div>
+                    <!-- 清空按钮 - 放在日志容器右下角 -->
+                    <button class="btn-clear-logs" id="clearLogsBtn" title="清空日志">清空</button>
+                    <div class="stats-bar">
+                        <div class="stat-item">任务次数: <span class="stat-value" id="taskCount">0</span></div>
+                        <div class="stat-item">用时: <span class="stat-value" id="timeUsed">0s</span></div>
+                        <div class="stat-item">成功: <span class="stat-value" id="successCount">0</span></div>
+                        <div class="stat-item">失败: <span class="stat-value" id="failCount">0</span></div>
+                        <div class="stat-item">成功率: <span class="stat-value" id="successRate">0%</span></div>
+                    </div>
+                    <!-- 延长按钮 -->
+                    <div class="anchor-trigger" id="logTrigger"></div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- 收件箱面板 -->
+        <div class="panel-c" id="panelC">
+            <div class="panel-header">
+                <span>收件箱</span>
+                <span id="inboxUnreadCount"
+                    style="font-family: 'Xiaolai', sans-serif; font-size: 15px; padding: 4px 10px; background: rgba(47, 47, 47, 0.1); border-radius: 12px;">未读消息0</span>
+            </div>
+            <div class="panel-content">
+                <div class="inbox-layout">
+                    <div class="contact-list" id="contactList">
+                        <!-- 联系人列表将通过JavaScript动态添加 -->
+                    </div>
+                    <div class="chat-area">
+                        <div class="chat-header" id="chatHeader"> 选择一个对话</div>
+                        <div class="chat-display" id="conversationDisplay">
+                            <!-- 对话内容将通过JavaScript动态添加 -->
+                        </div>
+                        <div class="reply-bar">
+                            <input type="text" class="reply-input" id="replyInput" placeholder="输入回复消息...">
+                            <button class="btn-send-reply" id="sendReplyBtn">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 切换按钮 -->
+        <button class="inbox-toggle-btn" id="inboxToggleBtn">
+            💬
+            <div class="notification-count">0</div>
+        </button>
+
+
+
+
+    </div>
+
+
+
+    <!-- 隐藏的文件输入 -->
+    <input type="file" id="numbersFile" class="file-input" accept=".txt,.csv">
+    <input type="file" id="messageFile" class="file-input" accept=".txt">
+
+    <script>
+        // 全局变量
+        let ws = null;
+        let reconnectTimer = null;
+        let isSending = false;
+        let currentChatId = null;
+        let unreadChatIds = new Set();
+        let newMessageNotification = null;
+        let globalStats = {
+            taskCount: 0,
+            totalSent: 0,
+            totalSuccess: 0,
+            totalFail: 0
+        };
+        const MAX_LOG_ITEMS = 200;
+        let logScrollPending = false;
+        let conversationScrollPending = false;
+
+        // 字符计数功能
+        function getStringLength(str) {
+            let length = 0;
+            for (let i = 0; i < str.length; i++) {
+                const charCode = str.charCodeAt(i);
+                if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
+                    length += 2;
+                } else {
+                    length += 1;
+                }
+            }
+            return length;
+        }
+
+        function updateCounts() {
+            const numbersText = document.getElementById('numbersText').value;
+            const numbers = numbersText.split(/[\n,]/).filter(n => n.trim()).length;
+            const numbersCountEl = document.getElementById('numbersCount');
+
+            // 号码计数器：0时黑色，大于0时绿色
+            if (numbers === 0) {
+                numbersCountEl.textContent = `号码: ${numbers}`;
+                numbersCountEl.classList.remove('has-numbers');
+            } else {
+                numbersCountEl.textContent = `号码: ${numbers}`;
+                numbersCountEl.classList.add('has-numbers');
+            }
+
+            const messageText = document.getElementById('messageText').value;
+            const charCount = getStringLength(messageText);
+            const messageCountEl = document.getElementById('messageCount');
+
+            // 消息计数器：0时黑色，大于0且<=160时绿色，超过160时红色并显示条数
+            if (charCount === 0) {
+                messageCountEl.textContent = `字数: ${charCount}`;
+                messageCountEl.classList.remove('has-content', 'over-limit');
+            } else if (charCount <= 160) {
+                messageCountEl.textContent = `字数: ${charCount}`;
+                messageCountEl.classList.remove('over-limit');
+                messageCountEl.classList.add('has-content');
+            } else {
+                const messageCount = Math.ceil(charCount / 160);
+                messageCountEl.innerHTML = `字数: ${charCount}/160 <span class="message-count-badge">${messageCount}条</span>`;
+                messageCountEl.classList.remove('has-content');
+                messageCountEl.classList.add('over-limit');
+            }
+        }
+
+        // 文件导入功能
+        function importNumbers() {
+            document.getElementById('numbersFile').click();
+        }
+
+        function importMessage() {
+            document.getElementById('messageFile').click();
+        }
+
+        function clearNumbers() {
+            const btn = document.getElementById('clearNumbersBtn');
+            document.getElementById('numbersText').value = '';
+            updateCounts();
+            // 修复移动端点击后高亮不消失的问题 - 强制移除焦点和样式
+            if (btn) {
+                btn.blur();
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+                // 延迟再次确保移除焦点
+                setTimeout(() => {
+                    btn.blur();
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                }, 100);
+            }
+        }
+
+        function clearMessage() {
+            const btn = document.getElementById('clearMessageBtn');
+            document.getElementById('messageText').value = '';
+            updateCounts();
+            // 修复移动端点击后高亮不消失的问题 - 强制移除焦点和样式
+            if (btn) {
+                btn.blur();
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+                // 延迟再次确保移除焦点
+                setTimeout(() => {
+                    btn.blur();
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                }, 100);
+            }
+        }
+
+        // 文件读取处理
+        document.getElementById('numbersFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('numbersText').value = e.target.result;
+                    updateCounts();
+                };
+                reader.readAsText(file);
+            }
+            this.value = '';
+        });
+
+        document.getElementById('messageFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('messageText').value = e.target.result;
+                    updateCounts();
+                };
+                reader.readAsText(file);
+            }
+            this.value = '';
+        });
+
+        // 更新连接状态
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (!statusEl) return;
+
+            if (connected) {
+                statusEl.innerHTML = '<span style="color: white; font-weight: bold;">●</span> 已连接';
+                statusEl.className = 'connection-status status-connected';
+            } else {
+                statusEl.innerHTML = '<span style="color: white; font-weight: bold;">●</span> 未连接';
+                statusEl.className = 'connection-status status-disconnected';
+            }
+        }
+
+        // WebSocket 连接
+        function connectWebSocket() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let wsUrl = urlParams.get('ws');
+
+            if (!wsUrl) {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                wsUrl = `${protocol}//askew-embraceable-lavenia.ngrok-free.dev/ws`;
+            }
+
+            try {
+                if (!ws || ws.readyState === WebSocket.CLOSED) {
+                    ws = new WebSocket(wsUrl);
+                    ws.onopen = () => {
+                        updateConnectionStatus(true);
+                        showNotification('已连接', 'success');
+                        if (reconnectTimer) clearTimeout(reconnectTimer);
+                    };
+                    ws.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            handleServerMessage(data);
+                        } catch (e) {
+                            console.error('解析消息失败:', e);
+                        }
+                    };
+                    ws.onerror = (error) => { };
+                    ws.onclose = () => {
+                        updateConnectionStatus(false);
+                        resetInboxOnConnect();
+                        if (reconnectTimer) clearTimeout(reconnectTimer);
+                        reconnectTimer = setTimeout(() => { connectWebSocket(); }, 3000);
+                    };
+                }
+            } catch (e) {
+                updateConnectionStatus(false);
+            }
+        }
+
+        function handleServerMessage(data) {
+            if (!data || typeof data !== 'object') return;
+
+            if (data.type === 'status_update') {
+                if (data.message === "TASK_COMPLETED") {
+                    isSending = false;
+                    updateButtonState();
+                    return;
+                }
+                addStatusMessage(data.message, data.message_type || 'info');
+
+                // 解析统计信息（从消息中提取）
+                if (data.message && typeof data.message === 'string') {
+                    // 匹配格式: "发送结果 谁输似水Total: {total} Success: {success} Failed: {fail} 成功率 {success}/{total}({rate}%)"
+                    const statsMatch = data.message.match(/发送结果\s+Total:\s*(\d+)\s+Success:\s*(\d+)\s+Failed:\s*(\d+)/i);
+                    if (statsMatch) {
+                        const total = parseInt(statsMatch[1]) || 0;
+                        const success = parseInt(statsMatch[2]) || 0;
+                        const fail = parseInt(statsMatch[3]) || 0;
+                        if (total > 0 || success > 0 || fail > 0) {
+                            updateGlobalStats(total, success, fail);
+                        }
+                    } else {
+                        // 备用解析：尝试其他格式
+                        const successMatch = data.message.match(/Success[：:]\s*(\d+)/i);
+                        const failMatch = data.message.match(/Failed[：:]\s*(\d+)/i);
+                        const totalMatch = data.message.match(/Total[：:]\s*(\d+)/i);
+
+                        if (successMatch || failMatch || totalMatch) {
+                            const success = successMatch ? parseInt(successMatch[1]) : 0;
+                            const fail = failMatch ? parseInt(failMatch[1]) : 0;
+                            const total = totalMatch ? parseInt(totalMatch[1]) : (success + fail);
+                            if (total > 0 || success > 0 || fail > 0) {
+                                updateGlobalStats(total, success, fail);
+                            }
+                        }
+                    }
+                }
+            } else if (data.type === 'connected') {
+                // WebSocket 连接成功，已经在 onopen 时清空了，这里不需要再清空
+            } else if (data.type === 'initial_chats') {
+                updateContactList(data.data);
+            } else if (data.type === 'new_messages') {
+                if (data.data.count > 0) {
+                    showNotification(`收到 ${data.data.count} 条新消息！`, 'info');
+                }
+                updateContactList(data.data.chat_list, data.data.updated_chats);
+                if (data.data && data.data.updated_chats && data.data.updated_chats.length > 0) {
+                    const updatedChatId = data.data.updated_chats[0];
+                    const chat = data.data.chat_list.find(c => c.chat_id === updatedChatId);
+                    if (chat && (!currentChatId || currentChatId !== updatedChatId) && data.data.count > 0) {
+                        showNewMessageNotification(updatedChatId, chat.name, chat.last_message_preview);
+                    }
+                }
+                if (currentChatId && data.data.updated_chats && data.data.updated_chats.includes(currentChatId)) {
+                    // 如果当前对话有临时消息（刚发送的），不要重新加载，避免重复显示
+                    const conversationDisplay = document.getElementById('conversationDisplay');
+                    const tempMessage = conversationDisplay.querySelector('[data-temp-message="true"]');
+                    if (!tempMessage) {
+                        requestConversation(currentChatId);
+                    }
+                }
+            } else if (data.type === 'conversation_data') {
+                // 如果是当前对话，且已有临时消息（刚发送的），完全忽略这次更新
+                const conversationDisplay = document.getElementById('conversationDisplay');
+                const tempMessage = conversationDisplay.querySelector('[data-temp-message="true"]');
+                if (tempMessage && data.chat_id === currentChatId) {
+                    // 检查最后一条消息是否和临时消息内容相同（忽略空格差异）
+                    if (data.data && data.data.messages && data.data.messages.length > 0) {
+                        const lastMsg = data.data.messages[data.data.messages.length - 1];
+                        const tempMsgText = tempMessage.querySelector('span').textContent.trim();
+                        const lastMsgText = (lastMsg.text || '').trim();
+                        if (lastMsg.is_from_me && lastMsgText === tempMsgText) {
+                            // 只移除临时标记，不调用 displayConversation，避免重复显示
+                            tempMessage.removeAttribute('data-temp-message');
+                            return; // 直接返回，不继续处理
+                        }
+                    }
+                    // 如果检测到临时消息，即使内容不完全匹配，也移除标记（可能是格式差异）
+                    tempMessage.removeAttribute('data-temp-message');
+                    return;
+                }
+                displayConversation(data.data, data.chat_id);
+            } else if (data.status === "success" && data.message === "回复已发送") {
+                document.getElementById('replyInput').value = '';
+            } else if (data.status === "error" && data.message.includes("回复发送失败")) {
+                // 静默处理错误
+            }
+        }
+
+        function addStatusMessage(message, type = 'info') {
+            const statusList = document.getElementById('statusList');
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            // 颜色定义（与统计栏一致）
+            const colors = {
+                total: '#9C27B0',      // 紫色 - 任务次数
+                time: '#2196F3',       // 蓝色 - 用时
+                success: '#4CAF50',    // 绿色 - 成功
+                fail: '#FF8A80',       // 浅红色 - 失败
+                rate: '#FF9800'        // 橙色 - 成功率
+            };
+
+            // 格式化消息，添加颜色高亮（只高亮数值，其他文本保持黑色）
+            function formatMessage(msg) {
+                let formatted = msg;
+                formatted = `<span style="color: #000000;">${formatted}</span>`;
+                formatted = formatted.replace(/Total:\s*(\d+)/gi,
+                    `Total: <span style="color: ${colors.total}; font-weight: bold;">$1</span>`);
+                formatted = formatted.replace(/Success:\s*(\d+)/gi,
+                    `Success: <span style="color: ${colors.success}; font-weight: bold;">$1</span>`);
+                formatted = formatted.replace(/Failed:\s*(\d+)/gi,
+                    `Failed: <span style="color: ${colors.fail}; font-weight: bold;">$1</span>`);
+                formatted = formatted.replace(/(成功率\s*)(\d+\/\d+\([^)]+\))/gi,
+                    `$1<span style="color: ${colors.rate}; font-weight: bold;">$2</span>`);
+                formatted = formatted.replace(/(用时:\s*)([\d:]+|[\d.]+[秒分时])/gi,
+                    `$1<span style="color: ${colors.time}; font-weight: bold;">$2</span>`);
+                return formatted;
+            }
+
+            // 1. 处理"开始发送"消息 - 格式化并加粗任务开头
+            if (message.includes('开始发送')) {
+                // 解析开始发送消息：格式 "开始发送 Task120215 (From +13528162835 to 13528162835)"
+                const startMatch = message.match(/开始发送\s+([^\s(]+)\s*\(From\s+([^)]+)\s+to\s+([^)]+)\)/);
+                if (startMatch) {
+                    const taskId = startMatch[1];
+                    const fromPhone = startMatch[2];
+                    const toPhone = startMatch[3];
+
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'log-item';
+                    messageEl.innerHTML = `<span style="color: #000000; font-weight: bold;">[${timestamp}] > 开始发送 ${taskId} :</span><br><span style="color: #000000;"> (From ${fromPhone} to ${toPhone})</span><br>`;
+                    statusList.appendChild(messageEl);
+                } else {
+                    // 如果没有匹配到格式，使用原始消息
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'log-item';
+                    messageEl.innerHTML = `<span style="color: #000000; font-weight: bold;">[${timestamp}] > ${message}</span>`;
+                    statusList.appendChild(messageEl);
+                }
+            }
+            // 2. 处理"发送完成"消息
+            else if (message.includes('发送完成')) {
+                const messageEl = document.createElement('div');
+                messageEl.className = 'log-item';
+                let formattedMsg = message;
+                // 格式化用时部分
+                formattedMsg = formattedMsg.replace(/(用时:\s*)([\d.]+秒)/g,
+                    `$1<span style="color: ${colors.time}; font-weight: bold;">$2</span>`);
+                // 确保有足够的空格
+                formattedMsg = formattedMsg.replace(/发送完成\s+/, '发送完成    ');
+                messageEl.innerHTML = `<span style="color: #000000;">[${timestamp}] > ${formattedMsg}</span><br>`;
+                statusList.appendChild(messageEl);
+            }
+            // 3. 处理"发送结果"消息（包含统计信息和可能的失败消息）
+            else if (message.includes('发送结果') || (message.includes('Total:') && message.includes('Success:'))) {
+                // 检查是否包含失败消息 - 处理不同的换行格式
+                const failPattern = /(❌\s*失败的消息:)/;
+                const hasFailures = failPattern.test(message);
+
+                let resultPart = message;
+                let failPart = '';
+
+                if (hasFailures) {
+                    const failMatch = message.match(failPattern);
+                    if (failMatch) {
+                        const failIndex = failMatch.index;
+                        resultPart = message.substring(0, failIndex).trim();
+                        failPart = message.substring(failIndex).trim();
+                    }
+                }
+
+                // 处理统计结果部分 - 去掉"发送结果"前缀
+                let statsMsg = resultPart.replace(/^发送结果\s+/, '').trim();
+                // 确保格式：Total: 4 Success: 1 Failed: 3   成功率 1/4(25%)
+                statsMsg = statsMsg.replace(/\s+成功率\s+/, '   成功率 ');
+
+                const messageEl = document.createElement('div');
+                messageEl.className = 'log-item';
+                messageEl.innerHTML = `<span style="color: #000000;">[${timestamp}] > ${formatMessage(statsMsg)}</span>`;
+                statusList.appendChild(messageEl);
+
+                // 如果有失败消息，单独处理
+                if (failPart) {
+                    // 添加空行
+                    const emptyEl = document.createElement('div');
+                    emptyEl.className = 'log-item';
+                    emptyEl.style.height = '8px';
+                    statusList.appendChild(emptyEl);
+
+                    // 失败消息标题
+                    const failTitleEl = document.createElement('div');
+                    failTitleEl.className = 'log-item';
+                    failTitleEl.innerHTML = '<span style="color: #000000; font-weight: bold;">❌ 失败的消息:</span>';
+                    statusList.appendChild(failTitleEl);
+
+                    // 解析失败项 - 处理各种换行格式
+                    let failText = failPart.replace(/^(❌\s*)?失败的消息:\s*/i, '');
+                    // 处理可能的不同换行符格式（\n, \r\n, 等）
+                    failText = failText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                    const failLines = failText.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line && /^\[\d+\]/.test(line)); // 匹配以 [数字] 开头的行
+                    
+                    failLines.forEach(line => {
+                        const failItemEl = document.createElement('div');
+                        failItemEl.className = 'log-item';
+                        failItemEl.innerHTML = `<span style="color: #000000;">${line}</span>`;
+                        statusList.appendChild(failItemEl);
+                    });
+                }
+            }
+            // 4. 处理其他普通消息
+            else {
+                const messageEl = document.createElement('div');
+                messageEl.className = 'log-item';
+                messageEl.innerHTML = `<span style="color: #000000;">[${timestamp}] > ${message}</span>`;
+                statusList.appendChild(messageEl);
+            }
+
+            // 限制日志条目数量
+            const logItems = statusList.querySelectorAll('.log-item');
+            if (logItems.length > MAX_LOG_ITEMS) {
+                for (let i = 0; i < logItems.length - MAX_LOG_ITEMS; i++) {
+                    logItems[i].remove();
+                }
+            }
+
+            // 自动滚动到底部
+            if (!logScrollPending) {
+                logScrollPending = true;
+                requestAnimationFrame(() => {
+                    statusList.scrollTop = statusList.scrollHeight;
+                    logScrollPending = false;
+                });
+            }
+        }
+
+        function sendCommand(action, data = {}) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                return false;
+            }
+            const command = { action: action, data: data };
+            ws.send(JSON.stringify(command));
+            return true;
+        }
+
+        // 发送功能
+        function startSending() {
+            const numbers = document.getElementById('numbersText').value;
+            const message = document.getElementById('messageText').value;
+            const interval = parseFloat(document.getElementById('intervalInput').value) || 1.0;
+
+            if (!numbers.trim() || !message.trim()) {
+                return;
+            }
+
+            if (sendCommand('start_sending', { numbers: numbers, message: message, interval: interval })) {
+                isSending = true;
+                updateButtonState();
+            }
+        }
+
+        function stopSending() {
+            if (sendCommand('stop_sending')) {
+                updateButtonState();
+            }
+        }
+
+        function updateButtonState() {
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = isSending;
+        }
+
+        // 更新通知计数
+        function updateNotificationCount() {
+            const notificationCountEl = document.getElementById('inboxToggleBtn').querySelector('.notification-count');
+            if (!notificationCountEl) return;
+
+            const unreadCount = unreadChatIds.size;
+
+            if (unreadCount > 0) {
+                notificationCountEl.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                notificationCountEl.classList.add('has-unread');
+            } else {
+                notificationCountEl.textContent = '0';
+                notificationCountEl.classList.remove('has-unread');
+            }
+
+            // 更新收件箱面板中的未读消息数
+            const inboxUnreadCountEl = document.getElementById('inboxUnreadCount');
+            if (inboxUnreadCountEl) {
+                inboxUnreadCountEl.textContent = `未读消息${unreadCount}`;
+            }
+        }
+
+        function resetInboxOnConnect() {
+            const contactList = document.getElementById('contactList');
+            if (contactList) {
+                contactList.innerHTML = '<div style="font-family: \'Xiaolai\', sans-serif; text-align:center; color:rgba(47,47,47,0.5); padding:20px; font-size:14px;">暂无对话</div>';
+            }
+
+            const conversationDisplay = document.getElementById('conversationDisplay');
+            if (conversationDisplay) {
+                conversationDisplay.innerHTML = '<div style="font-family: \'Xiaolai\', sans-serif; text-align:center; color:rgba(47,47,47,0.5); padding:20px; font-size:14px;">选择一个对话开始聊天</div>';
+            }
+
+            currentChatId = null;
+            unreadChatIds.clear();
+            updateNotificationCount(); // 更新通知计数
+            const replyInput = document.getElementById('replyInput');
+            if (replyInput) {
+                replyInput.disabled = true;
+            }
+            const sendReplyBtn = document.getElementById('sendReplyBtn');
+            if (sendReplyBtn) {
+                sendReplyBtn.disabled = true;
+            }
+        }
+
+        function updateContactList(chats, updatedChatIds = []) {
+            const contactList = document.getElementById('contactList');
+
+            if (!chats || chats.length === 0) {
+                contactList.innerHTML = '<div style="font-family: \'Xiaolai\', sans-serif; text-align:center; color:rgba(47,47,47,0.5); padding:20px; font-size:14px;">暂无对话</div>';
+                updateNotificationCount(); // 更新通知计数
+                return;
+            }
+
+            updatedChatIds.forEach(chatId => {
+                if (chatId !== currentChatId) {
+                    unreadChatIds.add(chatId);
+                }
+            });
+
+            updateNotificationCount(); // 更新通知计数
+
+            const fragment = document.createDocumentFragment();
+
+            chats.forEach(chat => {
+                const contactItem = document.createElement('div');
+                contactItem.className = 'contact-item';
+                if (chat.chat_id === currentChatId) {
+                    contactItem.classList.add('active');
+                }
+                // 如果有未读消息且不是当前对话，添加未读标记
+                if (unreadChatIds.has(chat.chat_id) && chat.chat_id !== currentChatId) {
+                    contactItem.classList.add('unread');
+                }
+                contactItem.dataset.chatId = chat.chat_id;
+                contactItem.innerHTML = `
+                    <div class="avatar">👤</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${chat.name}</div>
+                        <div class="contact-preview">${chat.last_message_preview || ''}</div>
+                    </div>
+                `;
+                contactItem.addEventListener('click', function () {
+                    selectChat(chat.chat_id, chat.name);
+                });
+                fragment.appendChild(contactItem);
+            });
+
+            contactList.innerHTML = '';
+            contactList.appendChild(fragment);
+        }
+
+        function selectChat(chatId, chatName) {
+            if (currentChatId === chatId) return;
+            currentChatId = chatId;
+            unreadChatIds.delete(chatId);
+            updateNotificationCount(); // 更新通知计数
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.classList.remove('active', 'unread');
+                if (item.dataset.chatId === chatId) {
+                    item.classList.add('active');
+                }
+            });
+            const chatHeader = document.getElementById('chatHeader');
+            if (chatHeader) {
+                const phoneNumber = chatName || chatId;
+                chatHeader.innerHTML = `<span class="phone-number">${phoneNumber}</span>`;
+            }
+            document.getElementById('replyInput').disabled = false;
+            document.getElementById('sendReplyBtn').disabled = false;
+            requestConversation(chatId);
+        }
+
+        function requestConversation(chatId) {
+            sendCommand('get_conversation', { chat_id: chatId });
+            const conversationDisplay = document.getElementById('conversationDisplay');
+            conversationDisplay.innerHTML = '<div style="text-align:center; color:rgba(47,47,47,0.5);">加载中...</div>';
+        }
+
+        function displayConversation(data, chatId) {
+            const conversationDisplay = document.getElementById('conversationDisplay');
+            if (!data || !data.messages || data.messages.length === 0) {
+                conversationDisplay.innerHTML = '<div style="text-align:center; color:rgba(47,47,47,0.5);">暂无消息</div>';
+                return;
+            }
+
+            // 检查是否有临时消息（刚发送的），如果有且是当前对话，只移除标记
+            const tempMessage = conversationDisplay.querySelector('[data-temp-message="true"]');
+            if (tempMessage && chatId === currentChatId) {
+                // 检查最后一条消息是否和临时消息内容相同
+                if (data.messages && data.messages.length > 0) {
+                    const lastMsg = data.messages[data.messages.length - 1];
+                    const tempMsgText = tempMessage.querySelector('span').textContent.trim();
+                    const lastMsgText = (lastMsg.text || lastMsg.message || '').trim();
+                    if (lastMsg.is_from_me && lastMsgText === tempMsgText) {
+                        // 只移除临时标记，不重新显示
+                        tempMessage.removeAttribute('data-temp-message');
+                        return;
+                    }
+                }
+                // 如果内容不匹配，也移除标记（可能是格式差异）
+                tempMessage.removeAttribute('data-temp-message');
+            }
+
+            const fragment = document.createDocumentFragment();
+            data.messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = msg.is_from_me ? 'chat-bubble right' : 'chat-bubble left';
+
+                // 修复时间显示
+                let timeStr = '';
+                if (msg.timestamp) {
+                    try {
+                        // 尝试解析 ISO 格式的时间戳
+                        const date = new Date(msg.timestamp);
+                        if (!isNaN(date.getTime())) {
+                            timeStr = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        } else {
+                            // 如果解析失败，尝试其他格式
+                            timeStr = msg.timestamp;
+                        }
+                    } catch (e) {
+                        timeStr = msg.timestamp || '';
+                    }
+                }
+
+                bubble.innerHTML = `
+                    <span>${msg.text || msg.message || ''}</span>
+                    <div class="chat-time">${timeStr}</div>
+                `;
+                fragment.appendChild(bubble);
+            });
+
+            conversationDisplay.innerHTML = '';
+            conversationDisplay.appendChild(fragment);
+
+            if (!conversationScrollPending) {
+                conversationScrollPending = true;
+                requestAnimationFrame(() => {
+                    conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
+                    conversationScrollPending = false;
+                });
+            }
+        }
+
+        function sendReply() {
+            const replyInput = document.getElementById('replyInput');
+            const message = replyInput.value.trim();
+            if (!message || !currentChatId) return;
+
+            const conversationDisplay = document.getElementById('conversationDisplay');
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble right';
+            bubble.setAttribute('data-temp-message', 'true');
+            bubble.innerHTML = `
+                <span>${message}</span>
+                <div class="chat-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+            `;
+            conversationDisplay.appendChild(bubble);
+            conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
+            replyInput.value = '';
+            sendCommand('send_reply', { chat_id: currentChatId, message: message });
+        }
+
+        // 显示通知消息
+        function showNotification(message, type = 'info') {
+            // 简单的控制台输出，或者可以扩展为显示UI通知
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            // 如果需要UI通知，可以在这里添加
+        }
+
+        function showNewMessageNotification(chatId, senderName, messagePreview) {
+            console.log('showNewMessageNotification called:', chatId, senderName);
+            // 移除旧的气泡提醒
+            const oldBubble = document.querySelector('.message-bubble-notification');
+            if (oldBubble) {
+                oldBubble.remove();
+            }
+
+            // 创建新的气泡提醒
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble-notification';
+            bubble.innerHTML = `📨 新消息: ${senderName}`;
+
+            // 计算清空按钮的位置
+            const clearBtn = document.getElementById('clearLogsBtn');
+            if (clearBtn) {
+                const rect = clearBtn.getBoundingClientRect();
+                bubble.style.top = `${rect.top - 50}px`;
+            } else {
+                // 如果找不到清空按钮，使用默认位置
+                bubble.style.top = '50%';
+            }
+
+            document.body.appendChild(bubble);
+            console.log('Bubble notification created and added to DOM');
+
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (bubble && bubble.parentNode) {
+                    bubble.remove();
+                }
+            }, 3000);
+        }
+
+        function updateGlobalStats(total = 0, success = 0, fail = 0) {
+            // 只有在有实际任务数据时才增加任务计数
+            if (total > 0 || success > 0 || fail > 0) {
+                globalStats.taskCount++;
+            }
+            globalStats.totalSent += total;
+            globalStats.totalSuccess += success;
+            globalStats.totalFail += fail;
+
+            const totalAll = globalStats.totalSuccess + globalStats.totalFail;
+            const successRate = totalAll > 0 ? (globalStats.totalSuccess / totalAll * 100) : 0;
+
+            document.getElementById('taskCount').textContent = globalStats.taskCount;
+            document.getElementById('successCount').textContent = globalStats.totalSuccess;
+            document.getElementById('failCount').textContent = globalStats.totalFail;
+            document.getElementById('successRate').textContent = `${successRate.toFixed(1)}%`;
+        }
+
+        function initGlobalStatsDisplay() {
+            document.getElementById('taskCount').textContent = globalStats.taskCount;
+            document.getElementById('successCount').textContent = globalStats.totalSuccess;
+            document.getElementById('failCount').textContent = globalStats.totalFail;
+            const totalAll = globalStats.totalSuccess + globalStats.totalFail;
+            const successRate = totalAll > 0 ? (globalStats.totalSuccess / totalAll * 100) : 0;
+            document.getElementById('successRate').textContent = `${successRate.toFixed(1)}%`;
+        }
+
+        // 工作区切换功能
+        document.getElementById('inboxToggleBtn').addEventListener('click', function () {
+            const workspaceAB = document.getElementById('workspaceAB');
+            const panelC = document.getElementById('panelC');
+
+            // 检查是否是手机端
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                // 手机端：使用类名切换，确保CSS优先级
+                if (workspaceAB && !workspaceAB.classList.contains('mobile-hide')) {
+                    // 切换到收件箱
+                    workspaceAB.classList.add('mobile-hide');
+                    if (panelC) {
+                        panelC.classList.add('mobile-show');
+                    }
+                    this.classList.add('in-inbox');
+                } else {
+                    // 切换回工作区A+B
+                    workspaceAB.classList.remove('mobile-hide');
+                    if (panelC) {
+                        panelC.classList.remove('mobile-show');
+                    }
+                    this.classList.remove('in-inbox');
+                }
+            } else {
+                // 桌面端：使用原有的显示/隐藏逻辑
+                if (workspaceAB && workspaceAB.style.display !== 'none') {
+                    workspaceAB.style.display = 'none';
+                    if (panelC) {
+                        panelC.style.display = 'flex';
+                    }
+                    this.classList.add('in-inbox');
+                } else {
+                    if (panelC) {
+                        panelC.style.display = 'none';
+                    }
+                    workspaceAB.style.display = 'flex';
+                    this.classList.remove('in-inbox');
+                }
+            }
+        });
+
+        // 清空日志功能
+        document.getElementById('clearLogsBtn').addEventListener('click', function () {
+            document.getElementById('statusList').innerHTML = '';
+        });
+
+        // 事件监听
+        document.getElementById('numbersText').addEventListener('input', updateCounts);
+        document.getElementById('messageText').addEventListener('input', updateCounts);
+        document.getElementById('importNumbersBtn').addEventListener('click', importNumbers);
+        document.getElementById('clearNumbersBtn').addEventListener('click', clearNumbers);
+        document.getElementById('importMessageBtn').addEventListener('click', importMessage);
+        document.getElementById('clearMessageBtn').addEventListener('click', clearMessage);
+        document.getElementById('sendBtn').addEventListener('click', startSending);
+        document.getElementById('sendReplyBtn').addEventListener('click', sendReply);
+        document.getElementById('replyInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendReply();
+            }
+        });
+
+        // 延长逻辑（简化版，只处理点击，不处理hover展开）
+        const lockState = {};
+
+        function setupExpand(triggerId, wrapperId) {
+            const trigger = document.getElementById(triggerId);
+            const wrapper = document.getElementById(wrapperId);
+            if (!trigger || !wrapper) return;
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (lockState[wrapperId]) {
+                    lockState[wrapperId] = false;
+                    wrapper.classList.remove('locked');
+                    wrapper.classList.remove('expanded');
+                } else {
+                    lockState[wrapperId] = true;
+                    wrapper.classList.add('locked');
+                    wrapper.classList.add('expanded');
+                }
+            });
+        }
+
+        // 更新间隔选择器的颜色
+        function updateIntervalColor() {
+            const intervalSelect = document.getElementById('intervalInput');
+            if (intervalSelect) {
+                const value = intervalSelect.value;
+                intervalSelect.setAttribute('data-value', value);
+            }
+        }
+
+        // 初始化
+        function init() {
+            updateCounts();
+            initGlobalStatsDisplay();
+            updateButtonState();
+            updateConnectionStatus(false); // 初始状态为未连接
+            resetInboxOnConnect();
+            connectWebSocket();
+            document.getElementById('statusList').innerHTML = '';
+
+            // 设置间隔选择器的初始颜色
+            updateIntervalColor();
+
+            // 监听间隔选择器的变化
+            const intervalSelect = document.getElementById('intervalInput');
+            if (intervalSelect) {
+                intervalSelect.addEventListener('change', updateIntervalColor);
+            }
+
+            // 初始化通知计数
+            updateNotificationCount();
+
+            // 设置延长功能（如果需要的话）
+            setupExpand('numTrigger', 'numWrapper');
+            setupExpand('logTrigger', 'logWrapper');
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
