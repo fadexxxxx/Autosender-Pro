@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -4815,7 +4815,7 @@
 
             const username = usernameEl.value.trim();
             const password = passwordEl.value.trim();
-
+            
             if (!username || !password) {
                 if (typeof showMessage === 'function') {
                     showMessage('请输入用户名和密码', 'error');
@@ -4824,51 +4824,79 @@
                 }
                 return;
             }
-
-            // 保存登录信息
-            localStorage.setItem('user_id', username);
-            localStorage.setItem('auth_token', 'temp_token_' + Date.now());
-
-            if (typeof showMessage === 'function') {
-                showMessage('登录成功！正在跳转...', 'success');
+            
+            // 调用API进行登录验证
+            async function doLogin() {
+                try {
+                    if (typeof showMessage === 'function') {
+                        showMessage('正在验证...', 'info');
+                    }
+                    
+                    const API_BASE_URL = 'https://autosender.up.railway.app/api';
+                    const response = await fetch(`${API_BASE_URL}/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        // 登录成功，保存token和用户信息
+                        localStorage.setItem('user_id', data.user_id || username);
+                        localStorage.setItem('auth_token', data.token);
+                        localStorage.setItem('username', username);
+                        
+                        if (typeof showMessage === 'function') {
+                            showMessage('登录成功！正在跳转...', 'success');
+                        }
+                        
+                        // 切换页面
+                        setTimeout(() => {
+                            const loginPage = document.getElementById('loginPage');
+                            const contentWrapper = document.querySelector('.content-wrapper');
+                            const mainContainer = document.querySelector('.main-container');
+                            
+                            if (loginPage) loginPage.style.display = 'none';
+                            if (contentWrapper) contentWrapper.style.display = 'flex';
+                            if (mainContainer) mainContainer.style.display = 'flex';
+                            
+                            if (typeof showMainApp === 'function') {
+                                showMainApp();
+                            }
+                            
+                            if (typeof window.init === 'function') {
+                                window.init();
+                            }
+                        }, 500);
+                    } else {
+                        // 登录失败
+                        const errorMsg = data.message || '登录失败，请检查用户名和密码';
+                        if (typeof showMessage === 'function') {
+                            showMessage(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
+                    }
+                } catch (error) {
+                    console.error('登录错误:', error);
+                    // API服务器可能未启动，提示用户
+                    const errorMsg = '无法连接到登录服务器。请先启动API服务器：python api_server.py';
+                    if (typeof showMessage === 'function') {
+                        showMessage(errorMsg, 'error');
+                    } else {
+                        alert(errorMsg);
+                    }
+                }
             }
-
-            // 延迟执行，确保DOM已加载
-            setTimeout(() => {
-                console.log('尝试切换到主应用...');
-
-                // 直接操作DOM元素切换页面
-                const loginPage = document.getElementById('loginPage');
-                const contentWrapper = document.querySelector('.content-wrapper');
-                const mainContainer = document.querySelector('.main-container');
-
-                if (loginPage) {
-                    loginPage.style.display = 'none';
-                    console.log('隐藏登录页面');
-                }
-
-                if (contentWrapper) {
-                    contentWrapper.style.display = 'flex';
-                    console.log('显示主应用容器');
-                }
-
-                if (mainContainer) {
-                    mainContainer.style.display = 'flex';
-                    console.log('显示主容器');
-                }
-
-                // 调用 showMainApp 函数（如果存在）
-                if (typeof showMainApp === 'function') {
-                    showMainApp();
-                }
-
-                // 初始化主应用
-                if (typeof window.init === 'function') {
-                    window.init();
-                } else {
-                    console.warn('init 函数不存在');
-                }
-            }, 500);
+            
+            // 执行登录
+            doLogin();
         }
 
         // 将 handleLogin 挂载到 window，方便后续覆盖
@@ -5934,7 +5962,7 @@
         // 用户系统相关
         let currentUserId = null;
         let authToken = null;
-        const API_BASE_URL = 'http://localhost:5000/api'; // API服务器地址
+        const API_BASE_URL = 'https://autosender.up.railway.app/api'; // API服务器地址
         const TEST_MODE = false; // 测试模式：true=绕过API，使用本地模拟数据；false=使用真实API
 
         // 更新用户信息显示
@@ -7714,13 +7742,81 @@
                     return;
                 }
 
-                // 保存登录信息
-                localStorage.setItem('user_id', username);
-                localStorage.setItem('auth_token', 'temp_token_' + Date.now());
-
-                if (window.showMessage) {
-                    showMessage('登录成功！正在跳转...', 'success');
+                // 调用API进行登录验证
+                async function doLogin() {
+                    try {
+                        if (window.showMessage) {
+                            showMessage('正在验证...', 'info');
+                        }
+                        
+                        const API_BASE_URL = 'https://autosender.up.railway.app/api';
+                        const response = await fetch(`${API_BASE_URL}/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                username: username,
+                                password: password
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.success) {
+                            // 登录成功，保存token和用户信息
+                            localStorage.setItem('user_id', data.user_id || username);
+                            localStorage.setItem('auth_token', data.token);
+                            localStorage.setItem('username', username);
+                            
+                            if (window.showMessage) {
+                                showMessage('登录成功！正在跳转...', 'success');
+                            }
+                            
+                            // 切换页面
+                            setTimeout(() => {
+                                console.log('开始切换页面...');
+                                
+                                const loginPage = document.getElementById('loginPage');
+                                const contentWrapper = document.querySelector('.content-wrapper');
+                                const mainContainer = document.querySelector('.main-container');
+                                
+                                if (loginPage) loginPage.style.display = 'none';
+                                if (contentWrapper) contentWrapper.style.display = 'flex';
+                                if (mainContainer) mainContainer.style.display = 'flex';
+                                
+                                if (typeof showMainApp === 'function') {
+                                    showMainApp();
+                                }
+                                
+                                if (typeof window.init === 'function') {
+                                    window.init();
+                                }
+                            }, 500);
+                        } else {
+                            // 登录失败
+                            const errorMsg = data.message || '登录失败，请检查用户名和密码';
+                            if (window.showMessage) {
+                                showMessage(errorMsg, 'error');
+                            } else {
+                                alert(errorMsg);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('登录错误:', error);
+                        // API服务器可能未启动，提示用户
+                        const errorMsg = '无法连接到登录服务器，请确保API服务器已启动（python api_server.py）';
+                        if (window.showMessage) {
+                            showMessage(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
+                    }
                 }
+                
+                // 执行登录
+                doLogin();
+                return;
 
                 setTimeout(() => {
                     console.log('开始切换页面...');
