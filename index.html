@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -6,7 +6,9 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>AutoSender Pro</title>
+    <!-- 全局样式和字体设置 -->
     <style>
+        /*#region 全局样式和字体设置 */
         @font-face {
             font-family: 'Xiaolai';
             src: url('./test/Xiaolai.ttf') format('truetype');
@@ -27,14 +29,14 @@
             box-sizing: border-box;
         }
 
-        /* 全局字体设置 - 只使用 Xiaolai */
+        /* 全局字体设置 */
         *,
         *::before,
         *::after {
             font-family: 'Xiaolai', sans-serif !important;
         }
 
-        /* textarea 和 log-box 也使用 Xiaolai */
+        /* 输入框和日志框字体 */
         textarea,
         .log-box,
         #numbersText,
@@ -42,6 +44,7 @@
             font-family: 'Xiaolai', sans-serif !important;
         }
 
+        /* 输入框占位符字体 */
         textarea::placeholder {
             font-family: 'Xiaolai', sans-serif !important;
         }
@@ -55,10 +58,10 @@
             overflow: hidden;
         }
 
+        /* 页面主体 */
         body {
             background: linear-gradient(135deg, #00ff88 0%, #0080ff 50%, #be7dff 100%);
             background-color: #00ff88;
-            /* 后备背景色，防止渐变加载前的白屏 */
             font-family: 'Xiaolai', sans-serif;
             color: var(--text-dark);
             padding: 10px;
@@ -66,17 +69,15 @@
             justify-content: center;
             align-items: center;
             box-sizing: border-box;
-            /* 防止初始渲染时的闪烁 */
             visibility: visible;
             opacity: 1;
         }
 
-        /* 内容包装器 - 包含按钮和主容器 */
+        /* 内容包装器 */
         .content-wrapper {
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            /* 不设置固定尺寸，由JavaScript动态设置，确保在任何DPI下都显示正确尺寸 */
             box-sizing: border-box;
             flex-shrink: 0;
         }
@@ -89,12 +90,13 @@
             align-items: flex-start;
             margin-right: 10px;
             margin-top: 30px;
-            /* 不设置固定宽度，自适应内容 */
             flex-shrink: 0;
             box-sizing: border-box;
         }
 
-        /* 导航按钮栏 */
+        /*#endregion */
+        /*#region 导航按钮样式 */
+        /* 导航按钮组 */
         .nav-buttons {
             display: flex;
             flex-direction: column;
@@ -102,6 +104,7 @@
             align-items: flex-start;
         }
 
+        /* 导航按钮基础样式 */
         .nav-btn {
             padding: 10px 20px;
             border: 2px solid var(--border-dark);
@@ -118,11 +121,12 @@
             position: relative;
         }
 
-        /* 主页面按钮 - 粉红橙色系 */
+        /* 主页面按钮 */
         #navHomeBtn {
             background: linear-gradient(135deg, #b2ff9be6, rgb(208, 255, 1));
         }
 
+        /* 主页面按钮 - 悬停效果 */
         #navHomeBtn:hover {
             background: linear-gradient(20deg, #d0fcc4 0%, #2eef68 50%, #02ff0a 100%);
             border-color: #0a0909;
@@ -130,6 +134,7 @@
             box-shadow: 0 6px 15px rgba(250, 112, 154, 0.5);
         }
 
+        /* 主页面按钮 - 激活状态 */
         #navHomeBtn:active,
         #navHomeBtn.active {
             background: linear-gradient(120deg, #f50bce 0%, hsl(346, 99%, 57%) 50%, hsla(0, 100%, 60%, 0.86) 100%);
@@ -138,19 +143,20 @@
             font-weight: 900;
         }
 
+        /* 主页面按钮 - 激活状态悬停 */
         #navHomeBtn.active:hover {
             transform: translateX(5px) scale(1.08);
             box-shadow: 0 6px 18px rgba(240, 147, 251, 0.6);
         }
 
-        /* IMessage按钮 - 蓝青色系 */
+        /* IMessage按钮 */
         #navSendBtn {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #666bff 100%);
             font-size: 10px;
             padding: 12px 15px;
-
         }
 
+        /* IMessage按钮 - 悬停效果 */
         #navSendBtn:hover {
             background: linear-gradient(100deg, #d0fcc4 0%, #2eef68 50%, #02ff0a 100%);
             border-color: #000002;
@@ -158,6 +164,7 @@
             box-shadow: 0 6px 15px rgba(79, 172, 254, 0.5);
         }
 
+        /* IMessage按钮 - 激活状态 */
         #navSendBtn:active,
         #navSendBtn.active {
             background: linear-gradient(120deg, #f50bce 0%, hsl(346, 99%, 57%) 50%, hsla(0, 100%, 60%, 0.86) 100%);
@@ -166,17 +173,46 @@
             font-weight: 900;
         }
 
+        /* IMessage按钮 - 激活状态悬停 */
         #navSendBtn.active:hover {
             transform: translateX(5px) scale(1.08);
             box-shadow: 0 6px 18px rgba(102, 166, 255, 0.6);
-
         }
 
-        /* 收件箱按钮 - 橙黄色系 */
+        /* 账号管理按钮 */
+        #navAccountBtn {
+            background: linear-gradient(135deg, #a8c0ff 0%, #9d8fff 50%, #b794f6 100%);
+        }
+
+        /* 账号管理按钮 - 悬停效果 */
+        #navAccountBtn:hover {
+            background: linear-gradient(150deg, #d0fcc4 0%, #2eef68 50%, #02ff0a 100%);
+            border-color: #000000;
+            transform: translateX(5px) scale(1.08);
+            box-shadow: 0 6px 15px rgba(157, 143, 255, 0.5);
+        }
+
+        /* 账号管理按钮 - 激活状态 */
+        #navAccountBtn:active,
+        #navAccountBtn.active {
+            background: linear-gradient(120deg, #f50bce 0%, hsl(346, 99%, 57%) 50%, hsla(0, 100%, 60%, 0.86) 100%);
+            border-width: 3px;
+            box-shadow: 0 3px 10px rgba(183, 148, 246, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            font-weight: 900;
+        }
+
+        /* 账号管理按钮 - 激活状态悬停 */
+        #navAccountBtn.active:hover {
+            transform: translateX(5px) scale(1.08);
+            box-shadow: 0 6px 18px rgba(183, 148, 246, 0.6);
+        }
+
+        /* 收件箱按钮 */
         #navInboxBtn {
             background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffb347 100%);
         }
 
+        /* 收件箱按钮 - 悬停效果 */
         #navInboxBtn:hover {
             background: linear-gradient(150deg, #d0fcc4 0%, #2eef68 50%, #02ff0a 100%);
             border-color: #000000;
@@ -184,6 +220,7 @@
             box-shadow: 0 6px 15px rgba(252, 182, 159, 0.5);
         }
 
+        /* 收件箱按钮 - 激活状态 */
         #navInboxBtn:active,
         #navInboxBtn.active {
             background: linear-gradient(120deg, #f50bce 0%, hsl(346, 99%, 57%) 50%, hsla(0, 100%, 60%, 0.86) 100%);
@@ -192,12 +229,42 @@
             font-weight: 900;
         }
 
+        /* 收件箱按钮 - 激活状态悬停 */
         #navInboxBtn.active:hover {
             transform: translateX(5px) scale(1.08);
             box-shadow: 0 6px 18px rgba(255, 179, 71, 0.6);
         }
 
-        /* 主容器 - 固定尺寸 */
+        /* 退出账号按钮 */
+        #navLogoutBtn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        /* 退出账号按钮 - 悬停效果 */
+        #navLogoutBtn:hover {
+            background: linear-gradient(150deg, #ff5252 0%, #d32f2f 50%, #b71c1c 100%);
+            border-color: #000000;
+            transform: translateX(5px) scale(1.08);
+            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.5);
+        }
+
+        /* 退出账号按钮 - 激活状态 */
+        #navLogoutBtn:active {
+            background: linear-gradient(120deg, #d32f2f 0%, #b71c1c 50%, #8b0000 100%);
+            border-width: 3px;
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            font-weight: 900;
+        }
+
+        /* 退出账号按钮 - 激活状态悬停 */
+        #navLogoutBtn:active:hover {
+            transform: translateX(5px) scale(1.08);
+            box-shadow: 0 6px 18px rgba(255, 107, 107, 0.6);
+        }
+
+        /*#endregion */
+        /*#region 主容器和工作区 */
+        /* 主容器 */
         .main-container {
             display: flex;
             gap: 10px;
@@ -218,24 +285,24 @@
             position: relative;
         }
 
-        /* A版单独居中显示 */
+        /* 工作区A+B - 单面板模式（只显示A版） */
         .workspace-ab.single-panel {
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* A版单独显示时的样式 */
+        /* 工作区A+B - 单面板模式下的A版居中 */
         .workspace-ab.single-panel .panel-a {
             margin: 0 auto;
         }
 
-        /* 显示B版时，恢复正常的flex布局 */
+        /* 工作区A+B - 显示日志面板模式 */
         .workspace-ab.show-log {
             display: flex;
         }
 
-        /* 日志面板按钮 */
+        /* 日志面板切换按钮 */
         .btn-log-panel {
             position: absolute;
             left: 10px;
@@ -253,6 +320,7 @@
             white-space: nowrap;
         }
 
+        /* 日志面板切换按钮 - 悬停效果 */
         .btn-log-panel:hover {
             background: linear-gradient(135deg, rgba(255, 148, 134, 0.98) 0%, rgba(255, 180, 80, 0.95) 50%, rgba(102, 255, 189, 0.98) 100%);
             border-color: #FF9800;
@@ -260,24 +328,29 @@
             box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5), 0 0 25px rgba(255, 152, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
 
+        /* 日志面板切换按钮 - 点击效果 */
         .btn-log-panel:active {
             transform: translateY(-1px) scale(0.98);
             box-shadow: 0 3px 10px rgba(255, 152, 0, 0.4), 0 0 15px rgba(255, 152, 0, 0.3);
             background: linear-gradient(135deg, rgba(255, 180, 80, 0.95) 0%, rgba(255, 160, 60, 0.9) 50%, rgba(255, 140, 40, 0.95) 100%);
         }
 
+        /* 日志面板切换按钮 - 激活状态 */
         .btn-log-panel.active {
             background: linear-gradient(135deg, rgba(202, 136, 255, 0.3) 0%, rgb(255, 70, 190) 50%, rgb(255, 130, 136) 100%);
             border-color: #8B00FF;
             box-shadow: 0 4px 15px rgba(139, 0, 255, 0.4), 0 0 20px rgba(139, 0, 255, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
         }
 
+        /* 日志面板切换按钮 - 激活状态悬停 */
         .btn-log-panel.active:hover {
             background: linear-gradient(135deg, rgba(233, 90, 255, 0.924) 0%, hsl(270, 100%, 81%) 50%, rgb(102, 126, 234) 100%);
             box-shadow: 0 6px 20px rgba(139, 0, 255, 0.5), 0 0 25px rgba(139, 0, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
 
-        /* A版面板 */
+        /*#endregion */
+        /*#region A版面板（发送面板） */
+        /* A版面板（发送面板） */
         .panel-a {
             width: 750px;
             height: 580px;
@@ -291,12 +364,15 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
+        /* A版面板 - 悬停效果 */
         .panel-a:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px var(--shadow);
         }
 
-        /* B版面板 */
+        /*#endregion */
+        /*#region B版面板（日志面板） */
+        /* B版面板（日志面板） */
         .panel-b {
             width: 450px;
             background: linear-gradient(to right, #8ad3f7 0%, #9becd1 100%);
@@ -313,23 +389,26 @@
             flex-shrink: 0;
         }
 
-        /* 显示B版时的样式 */
+        /* B版面板 - 显示状态 */
         .workspace-ab.show-log .panel-b {
             display: flex;
         }
 
-        /* 显示B版时，A版不再居中，恢复正常的flex布局 */
+        /* 工作区A+B - 显示日志时的布局 */
         .workspace-ab.show-log {
             display: flex;
             align-items: flex-start;
         }
 
+        /* B版面板 - 悬停效果 */
         .panel-b:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px var(--shadow);
         }
 
-        /* 空白面板 */
+        /*#endregion */
+        /*#region D版面板（主页面） */
+        /* D版面板（主页面空白面板） */
         .panel-d {
             width: 100%;
             height: 100%;
@@ -348,7 +427,7 @@
             box-sizing: border-box;
         }
 
-        /* 主标题样式 */
+        /* 主页面标题 */
         .main-title {
             font-family: 'Xiaolai', sans-serif;
             font-size: 72px;
@@ -364,7 +443,7 @@
             line-height: 1.2;
         }
 
-        /* 副标题装饰 */
+        /* 主页面副标题 */
         .main-subtitle {
             font-family: 'Xiaolai', sans-serif;
             font-size: 18px;
@@ -377,7 +456,9 @@
             opacity: 0.8;
         }
 
-        /* 收件箱面板 */
+        /*#endregion */
+        /*#region C版面板（收件箱面板） */
+        /* C版面板（收件箱面板） */
         .panel-c {
             width: 900px;
             height: 100%;
@@ -395,7 +476,35 @@
             box-sizing: border-box;
         }
 
-        /* 统一标题栏 */
+        /*#endregion */
+        /*#region E版面板（账号管理面板） */
+        /* E版面板（账号管理面板） */
+        .panel-e {
+            width: 900px;
+            height: 100%;
+            background: linear-gradient(135deg, #ffd6e7 0%, #c1f0ff 50%, #c5ffc1 100%);
+            border-radius: 18px;
+            border: 3px solid var(--border-dark);
+            box-shadow: 0 4px 12px var(--shadow);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-sizing: border-box;
+        }
+
+        /* E版面板标题栏 */
+        .panel-e .panel-header {
+            background: linear-gradient(45deg, #e9f1ffe6 0%, hsla(355, 100%, 91%, 0.851) 35%, hsla(76, 100%, 80%, 0.902) 70%, rgba(216, 255, 172, 0.85) 100%);
+            border-radius: 15px 15px 0 0;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 面板标题栏（通用） */
         .panel-header {
             height: 35px;
             padding: 0 15px;
@@ -410,17 +519,20 @@
             flex-shrink: 0;
         }
 
+        /* A版面板标题栏 */
         .panel-a .panel-header {
             background: linear-gradient(0.3turn, #f072ee, #896bf7, #66ddf8);
             border-radius: 15px 15px 0 0;
         }
 
+        /* B版面板标题栏 */
         .panel-b .panel-header {
             background: linear-gradient(to right, #90a2f5 0%, #6bf3dd 100%);
             border-radius: 15px 15px 0 0;
             position: relative;
         }
 
+        /* C版面板标题栏 */
         .panel-c .panel-header {
             background: linear-gradient(45deg, #e9f1ffe6 0%, hsla(355, 100%, 91%, 0.851) 35%, hsla(76, 100%, 80%, 0.902) 70%, rgba(216, 255, 172, 0.85) 100%);
             border-radius: 15px 15px 0 0;
@@ -428,7 +540,7 @@
             box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-        /* 内容区域 - 统一边距 */
+        /* 面板内容区域（通用） */
         .panel-content {
             padding: 10px;
             flex: 1;
@@ -445,7 +557,7 @@
             overflow: hidden;
         }
 
-        /* A版输入区域 */
+        /* A版号码输入容器 */
         .numbers-container {
             width: 380px;
             min-width: 380px;
@@ -519,11 +631,12 @@
             border-color: var(--border-dark) !important;
         }
 
-        /* 修复移动端点击后高亮不消失的问题 */
+        /* 图标按钮 - 焦点状态 */
         .btn-icon:focus {
             outline: none;
         }
 
+        /* 图标按钮 - 焦点非激活状态 */
         .btn-icon:focus:not(:active) {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
             border-color: var(--border-dark) !important;
@@ -555,17 +668,19 @@
             transition: all 0.2s;
         }
 
-        /* 号码输入框使用 Xiaolai */
+        /* 号码输入框 */
         #numbersText {
             font-size: 18px;
             width: 100%;
             box-sizing: border-box;
         }
 
+        /* 输入框 - 焦点状态 */
         textarea:focus {
             background: rgba(255, 255, 255, 0.1);
         }
 
+        /* 字符计数器 */
         .char-count {
             position: absolute;
             bottom: 8px;
@@ -582,22 +697,22 @@
             gap: 4px;
         }
 
-        /* 号码计数器 - 0时黑色，大于0时绿色 */
+        /* 号码计数器 - 有号码时绿色 */
         #numbersCount.has-numbers {
             color: #4CAF50;
         }
 
-        /* 消息计数器 - 0时黑色，大于0且小于等于160时绿色 */
+        /* 消息计数器 - 有内容时绿色 */
         #messageCount.has-content {
             color: #4CAF50;
         }
 
-        /* 消息计数器 - 超过160时红色 */
+        /* 消息计数器 - 超过160字符时红色 */
         #messageCount.over-limit {
             color: #F44336;
         }
 
-        /* 条数标签 - 圆圈背景 */
+        /* 消息条数标签 */
         .message-count-badge {
             display: inline-flex;
             align-items: center;
@@ -613,7 +728,7 @@
             box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
         }
 
-        /* A版控制区域 */
+        /* A版控制栏 */
         .control-bar {
             display: flex;
             align-items: center;
@@ -624,13 +739,11 @@
             position: relative;
             flex-wrap: nowrap;
             width: 100%;
-
         }
 
-        /* 调整统计栏与日志面板的间距，让它靠近日志面板 */
+        /* 统计栏 - 在日志按钮后 */
         .btn-log-panel+.stats-bar-inline {
             flex-shrink: 0;
-            /* 禁止缩小 */
             white-space: nowrap;
             margin-left: 10px;
             margin-right: auto;
@@ -639,29 +752,27 @@
             overflow: visible;
         }
 
+        /* 内联统计栏 */
         .stats-bar-inline {
             flex: 1;
             min-width: 0;
             display: flex;
             gap: 8px;
-            /* 减小间距 */
             padding: 6px 8px;
-            /* 减小内边距 */
             background: linear-gradient(0.3turn, rgba(235, 185, 234, 0.6) 0%, rgba(178, 157, 255, 0.6) 50%, rgba(155, 236, 254, 0.6) 100%);
             border-radius: 8px;
             font-family: 'Xiaolai', sans-serif;
             font-size: 9px;
-            /* 缩小字体 */
             font-weight: bold;
             flex-wrap: wrap;
             overflow: hidden;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             flex-shrink: 1;
             justify-content: center;
-            /* 居中对齐统计项 */
             align-items: center;
         }
 
+        /* 内联统计栏 - 统计项 */
         .stats-bar-inline .stat-item {
             font-family: 'Xiaolai', sans-serif;
             color: var(--text-dark);
@@ -671,81 +782,76 @@
             flex-shrink: 1;
             min-width: 0;
             flex: 0 1 auto;
-            /* 自适应宽度 */
         }
 
+        /* 内联统计栏 - 统计值 */
         .stats-bar-inline .stat-value {
             font-family: 'Xiaolai', sans-serif;
             font-weight: bold;
             font-size: 9px;
-            /* 同步缩小 */
             margin-left: 2px;
             white-space: nowrap;
         }
 
-        /* A版统计栏中的颜色样式（6个不同颜色） */
+        /* A版内联统计栏 - 统计项颜色 */
         #taskCountInline {
             color: #9C27B0;
-            /* 紫色 */
         }
 
         #phoneCountInline {
             color: #2196F3;
-            /* 蓝色 */
         }
 
         #totalSentCountInline {
             color: #00BCD4;
-            /* 青色 */
         }
 
         #successCountInline {
             color: #4CAF50;
-            /* 绿色 */
         }
 
         #failCountInline {
             color: #FF5252;
-            /* 红色 */
         }
 
         #successRateInline {
             color: #FF9800;
-            /* 橙色 */
         }
 
-        /* 当B版打开时，隐藏A版中的统计栏 */
+        /* A版内联统计栏 - B版打开时隐藏 */
         .workspace-ab.show-log .stats-bar-inline {
             visibility: hidden;
             opacity: 0;
             pointer-events: none;
         }
 
-        /* B版中的统计栏（当B版打开时显示） */
+        /* B版统计栏 - B版打开时显示 */
         .workspace-ab.show-log .stats-bar {
             display: flex;
         }
 
-        /* 当B版未打开时，隐藏B版中的统计栏 */
+        /* B版统计栏 - 默认隐藏 */
         .stats-bar {
             display: none;
         }
 
+        /* 发送间隔控制 */
         .interval-control {
             display: flex;
             align-items: center;
             gap: 6px;
             flex-shrink: 0;
-            /* 禁止缩小 */
             white-space: nowrap;
         }
 
+        /* 发送间隔标签 */
         .interval-label {
             font-family: 'Xiaolai', sans-serif;
             font-size: 12px;
             font-weight: 600;
         }
 
+        /* 发送间隔选择器 */
         .interval-select {
             padding: 5px 8px;
             border: 2px solid var(--border-dark);
@@ -763,54 +869,49 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2);
         }
 
+        /* 发送间隔选择器 - 选项 */
         .interval-select option {
             font-family: 'Xiaolai', sans-serif;
             font-weight: bold;
             color: var(--text-dark);
-            /* 下拉列表中的选项保持黑色 */
             background: linear-gradient(135deg, rgba(235, 185, 234, 0.95) 0%, rgba(178, 157, 255, 0.9) 50%, rgba(155, 236, 254, 0.95) 100%);
         }
 
-        /* 选中值的颜色显示 - 只改变显示的值，不改变下拉选项 */
+        /* 发送间隔选择器 - 不同值的颜色 */
         .interval-select[data-value="0.3"] {
             color: #F44336;
-            /* 红色 */
             font-weight: 900;
         }
 
         .interval-select[data-value="0.7"] {
             color: #FF8A80;
-            /* 浅红色 */
             font-weight: 900;
         }
 
         .interval-select[data-value="1.0"] {
             color: #4CAF50;
-            /* 绿色 */
             font-weight: 900;
         }
 
         .interval-select[data-value="1.5"] {
             color: #FFE082;
-            /* 浅黄色 */
             font-weight: 900;
         }
 
         .interval-select[data-value="2.0"] {
             color: #FFC107;
-            /* 黄色 */
             font-weight: 900;
         }
 
+        /* 发送间隔选择器 - 悬停效果 */
         .interval-select:hover {
             border-color: #8B00FF;
             transform: translateY(-1px);
         }
 
-        /* 发送按钮 - 新颜色 */
+        /* 发送按钮 */
         .btn-send {
             flex-shrink: 0;
-            /* 禁止缩小 */
             white-space: nowrap;
             padding: 6px 20px;
             border: 2px solid var(--border-dark);
@@ -838,7 +939,7 @@
             transform: none;
         }
 
-        /* B版日志区域 */
+        /* B版日志容器 */
         .log-box {
             flex: 1;
             background: linear-gradient(135deg, #e6d2d8 0%, #a8edea 100%);
@@ -888,36 +989,29 @@
             margin-left: 3px;
         }
 
-        /* 任务次数 - 紫色 */
-        /* B版统计栏中的颜色样式（6个不同颜色，与A版一致） */
+        /* B版统计栏 - 统计项颜色 */
         #taskCount {
             color: #9C27B0;
-            /* 紫色 */
         }
 
         #phoneCount {
             color: #2196F3;
-            /* 蓝色 */
         }
 
         #totalSentCount {
             color: #00BCD4;
-            /* 青色 */
         }
 
         #successCount {
             color: #4CAF50;
-            /* 绿色 */
         }
 
         #failCount {
             color: #FF5252;
-            /* 红色 */
         }
 
         #successRate {
             color: #FF9800;
-            /* 橙色 */
         }
 
         /* 锚点触发器 */
@@ -968,6 +1062,7 @@
         }
 
 
+        /* 未读消息通知徽章 */
         .notification-count {
             position: absolute;
             top: -4px;
@@ -980,14 +1075,13 @@
             font-family: 'Xiaolai', sans-serif;
             font-size: 10px;
             display: none;
-            /* 默认隐藏 */
             align-items: center;
             justify-content: center;
             font-weight: bold;
             z-index: 10;
         }
 
-        /* 当有未读消息时显示 */
+        /* 未读消息通知徽章 - 有未读时显示 */
         .notification-count.has-unread {
             display: flex;
         }
@@ -1009,7 +1103,7 @@
             }
         }
 
-        /* 收件箱样式 */
+        /* 收件箱布局 */
         .inbox-layout {
             display: flex;
             height: 100%;
@@ -1051,7 +1145,7 @@
             box-shadow: 0 2px 8px rgba(168, 200, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
 
-        /* 未读消息标记 */
+        /* 联系人项 - 未读消息标记 */
         .contact-item.unread::before {
             content: '';
             position: absolute;
@@ -1220,27 +1314,24 @@
 
         }
 
+        /* 右侧聊天气泡 - 左侧箭头（边框层） */
         .chat-bubble.right:before {
             border: 7px solid transparent;
             border-bottom-color: rgba(0, 0, 0, 0.8);
-            /* 和气泡边框同色 */
             bottom: 0px;
             right: -6px;
             left: auto;
             z-index: 1;
         }
 
+        /* 右侧聊天气泡 - 左侧箭头（背景层） */
         .chat-bubble.right:after {
             border: 7px solid transparent;
             border-bottom-color: #86beec;
-            /* 和气泡背景同色 */
             bottom: 1px;
-            /* 向左上偏移 */
             right: -4px;
-            /* 向左上偏移 */
             left: auto;
             z-index: 2;
-            /* 在before上面 */
         }
 
 
@@ -1356,7 +1447,7 @@
             display: none;
         }
 
-        /* 连接状态 - 放在A板子标题栏最右边 */
+        /* 连接状态指示器 */
         .connection-status {
             display: inline-flex;
             align-items: center;
@@ -1386,7 +1477,7 @@
             font-weight: bold;
         }
 
-        /* 清空日志按钮 - 放在日志容器右下角 */
+        /* 清空日志按钮 */
         .btn-clear-logs {
             position: absolute;
             bottom: 57px;
@@ -1413,7 +1504,7 @@
             box-shadow: 0 4px 8px rgba(139, 0, 255, 0.2);
         }
 
-        /* 收件箱清空按钮 - 放在联系人列表右下角 */
+        /* 清空收件箱按钮 */
         .btn-clear-inbox {
             position: absolute;
             bottom: 10px;
@@ -1440,7 +1531,7 @@
             box-shadow: 0 4px 8px rgba(139, 0, 255, 0.2);
         }
 
-        /* 动态气泡提醒 */
+        /* 消息气泡通知 */
         .message-bubble-notification {
             position: fixed;
             right: -300px;
@@ -1485,6 +1576,8 @@
             }
         }
 
+        /*#endregion */
+        /*#region 移动端响应式样式 */
         /* 手机端样式 - 视口边距10px设计 */
         @media (max-width: 768px) {
 
@@ -1762,7 +1855,8 @@
             .workspace-ab.mobile-show,
             .panel-b.mobile-show,
             .panel-c.mobile-show,
-            .panel-d.mobile-show {
+            .panel-d.mobile-show,
+            .panel-e.mobile-show {
                 display: flex !important;
             }
 
@@ -2347,8 +2441,11 @@
                 box-sizing: border-box;
             }
         }
+        /*#endregion */
     </style>
+    <!-- 登录页面样式 -->
     <style>
+        /*#region 登录页面样式 */
         @font-face {
             font-family: 'Xiaolai';
             src: url('./test/Xiaolai.ttf') format('truetype');
@@ -2384,14 +2481,9 @@
             overflow: hidden;
         }
 
-        body {
-            background: linear-gradient(135deg, #00ff88 0%, #0080ff 50%, #be7dff 100%);
-            font-family: 'Xiaolai', sans-serif;
-            color: var(--text-dark);
-            display: flex;
+        /* 登录页面显示时的 body 样式（通过类名控制） */
+        body.login-mode {
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             padding-top: 0;
         }
 
@@ -2491,21 +2583,57 @@
             height: 16px;
         }
 
-        /* 登录面板 - User模式（橙黄色渐变风格，与背景不相似） */
+        /* 登录面板 - 玻璃质感效果（Glassmorphism） */
         .login-panel {
             width: 370px;
-            background-image: linear-gradient(to top, #0fd850 0%, #f9f047 100%);
+            /* 半透明背景，带轻微渐变 */
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.25) 0%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.2) 100%);
+            /* 毛玻璃模糊效果 */
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-radius: 18px;
-            border: 3px solid var(--border-dark);
-            box-shadow: 0 4px 12px var(--shadow);
+            /* 半透明边框，带高光 */
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.15),
+                0 2px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
             overflow: hidden;
             animation: panelFloat 0.6s ease-out;
             margin-top: 20px;
+            /* 增强立体感 */
+            position: relative;
         }
 
-        /* 管理员登录面板（粉红色渐变风格，与背景不相似） */
+        /* 玻璃面板内部高光效果 */
+        .login-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.6) 50%, 
+                transparent 100%);
+            pointer-events: none;
+        }
+
+        /* 管理员登录面板 - 玻璃质感（粉色调） */
         .login-panel.admin-mode {
-            background: linear-gradient(135deg, rgba(255, 214, 231, 0.85) 0%, rgba(255, 154, 162, 0.75) 50%, rgba(255, 107, 157, 0.85) 100%);
+            background: linear-gradient(135deg, 
+                rgba(255, 214, 231, 0.3) 0%, 
+                rgba(255, 154, 162, 0.25) 50%, 
+                rgba(255, 107, 157, 0.3) 100%);
+            border: 2px solid rgba(255, 200, 220, 0.5);
+            box-shadow: 
+                0 8px 32px rgba(255, 107, 157, 0.2),
+                0 2px 8px rgba(255, 107, 157, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
         @keyframes panelFloat {
@@ -2520,17 +2648,41 @@
             }
         }
 
-        /* 面板头部 - User模式 */
+        /* 面板头部 - 玻璃质感 */
         .login-panel-header {
-            background: linear-gradient(135deg, rgba(255, 236, 210, 0.6) 0%, rgba(252, 182, 159, 0.5) 50%, rgba(255, 179, 71, 0.6) 100%);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 10px 20px;
-            border-bottom: 3px solid var(--border-dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             text-align: center;
+            position: relative;
+        }
+
+        /* 头部底部高光 */
+        .login-panel-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.5) 50%, 
+                transparent 100%);
         }
 
         /* 面板头部 - Admin模式 */
         .login-panel.admin-mode .login-panel-header {
-            background: linear-gradient(135deg, rgba(255, 214, 231, 0.6) 0%, rgba(255, 154, 162, 0.5) 50%, rgba(255, 107, 157, 0.6) 100%);
+            background: linear-gradient(135deg, 
+                rgba(255, 214, 231, 0.25) 0%, 
+                rgba(255, 154, 162, 0.2) 50%, 
+                rgba(255, 107, 157, 0.25) 100%);
+            border-bottom: 1px solid rgba(255, 200, 220, 0.4);
         }
 
         .login-logo {
@@ -2545,9 +2697,10 @@
             display: none;
         }
 
-        /* 面板内容 */
+        /* 面板内容 - 保持透明 */
         .login-panel-content {
             padding: 15px 20px;
+            background: transparent;
         }
 
         /* User/Admin 切换按钮组 */
@@ -2684,14 +2837,20 @@
         .form-input {
             width: 90%;
             padding: 10px 14px;
-            border: 2px solid var(--border-dark);
+            border: 2px solid rgba(47, 47, 47, 0.3);
             border-radius: 12px;
             font-size: 15px;
             font-weight: bold;
             color: var(--text-dark);
-            background: rgba(255, 255, 255, 0.85);
+            /* 玻璃质感输入框 */
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             transition: all 0.3s ease;
             outline: none;
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
 
         .form-input::placeholder {
@@ -2700,9 +2859,12 @@
         }
 
         .form-input:focus {
-            border-color: #8B00FF;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 0 0 4px rgba(139, 0, 255, 0.15);
+            border-color: rgba(139, 0, 255, 0.6);
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 
+                0 0 0 4px rgba(139, 0, 255, 0.15),
+                0 4px 12px rgba(139, 0, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         /* 按钮样式 */
@@ -2890,21 +3052,25 @@
 
         /* ==================== 自定义弹窗样式 ==================== */
         .custom-modal-overlay {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            /* 移除backdrop-filter以提升性能 */
             justify-content: center;
             align-items: center;
             z-index: 2000;
-            animation: fadeIn 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            /* 使用opacity和visibility代替display，避免重排 */
         }
 
         .custom-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
             display: flex;
         }
 
@@ -2925,7 +3091,16 @@
             border: 3px solid var(--border-dark);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
-            animation: modalSlide 0.4s ease;
+            /* 简化动画，使用transform和opacity，启用GPU加速 */
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            will-change: transform, opacity;
+        }
+        
+        .custom-modal-overlay.show .custom-modal-panel {
+            transform: scale(1);
+            opacity: 1;
         }
 
         .custom-modal-panel.admin-manage-modal {
@@ -2935,21 +3110,25 @@
 
         /* ==================== 管理员密码弹窗 ==================== */
         .modal-overlay {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            /* 移除backdrop-filter以提升性能 */
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeIn 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            /* 使用opacity和visibility代替display，避免重排 */
         }
 
         .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
             display: flex;
         }
 
@@ -2960,7 +3139,16 @@
             border: 3px solid var(--border-dark);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
-            animation: modalSlide 0.4s ease;
+            /* 简化动画，使用transform和opacity，启用GPU加速 */
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            will-change: transform, opacity;
+        }
+        
+        .modal-overlay.show .modal-panel {
+            transform: scale(1);
+            opacity: 1;
         }
 
         @keyframes modalSlide {
@@ -3212,10 +3400,15 @@
         /* ==================== 服务器管理面板 ==================== */
         .admin-page {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             padding: 20px;
             overflow-y: auto;
+            background: linear-gradient(135deg, #00ff88 0%, #0080ff 50%, #be7dff 100%);
+            z-index: 100;
         }
 
         .admin-page.show {
@@ -3508,7 +3701,7 @@
         .server-add-row {
             display: flex;
             gap: 10px;
-            align-items: flex-end;
+            align-items: flex-start;
             margin-bottom: 15px;
         }
 
@@ -3522,7 +3715,9 @@
             font-size: 12px;
             font-weight: bold;
             color: var(--text-dark);
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            height: 20px;
+            line-height: 20px;
         }
 
         .server-input {
@@ -3829,7 +4024,7 @@
         .admin-account-form-row {
             display: flex;
             gap: 10px;
-            align-items: flex-end;
+            align-items: flex-start;
             margin-bottom: 15px;
         }
 
@@ -4287,10 +4482,13 @@
                 text-align: center;
             }
         }
+
+        /*#endregion */
     </style>
 </head>
 
-<body style="background: linear-gradient(135deg, #00ff88 0%, #0080ff 50%, #be7dff 100%); background-color: #00ff88;">
+<body>
+    <!--#region 登录页面 HTML -->
     <!-- ==================== 登录页面 ==================== -->
     <div class="login-page" id="loginPage" style="display: flex;">
         <!-- 右上角服务器管理入口（独立功能，需要管理员密码验证） -->
@@ -4363,17 +4561,21 @@
                 <!-- 注册表单 -->
                 <div id="registerForm" style="display: none;">
                     <div class="form-group">
-                        <input type="text" class="form-input" id="registerUsername" placeholder="用户名">
+                        <input type="text" class="form-input" id="registerUsername" placeholder="请设置用户名">
                     </div>
                     <div class="form-group">
                         <div class="password-wrapper">
-                            <input type="password" class="form-input" id="registerPassword" placeholder="密码">
+                            <input type="password" class="form-input" id="registerPassword" placeholder="请设置密码,至少4位">
                             <button type="button" class="show-password-btn"
                                 onclick="togglePassword('registerPassword', this)">👁️</button>
                         </div>
                     </div>
                     <div class="form-group">
-                        <input type="email" class="form-input" id="registerEmail" placeholder="邮箱（可选）">
+                        <div class="password-wrapper">
+                            <input type="password" class="form-input" id="registerConfirmPassword" placeholder="请确认密码,至少4位">
+                            <button type="button" class="show-password-btn"
+                                onclick="togglePassword('registerConfirmPassword', this)">👁️</button>
+                        </div>
                     </div>
                     <div class="btn-group">
                         <button class="btn-secondary" onclick="showLogin()">返回</button>
@@ -4385,7 +4587,8 @@
             </div>
         </div>
     </div>
-
+    <!--#endregion -->
+    <!--#region 自定义弹窗 HTML -->
     <!-- ==================== 自定义弹窗 ==================== -->
     <div class="custom-modal-overlay" id="customModal">
         <div class="custom-modal-panel" id="customModalPanel">
@@ -4403,7 +4606,8 @@
             </div>
         </div>
     </div>
-
+    <!--#endregion -->
+    <!--#region 管理员密码弹窗 HTML -->
     <!-- ==================== 管理员密码弹窗 ==================== -->
     <div class="modal-overlay" id="adminModal">
         <div class="modal-panel">
@@ -4425,7 +4629,8 @@
             </div>
         </div>
     </div>
-
+    <!--#endregion -->
+    <!--#region 服务器管理面板 HTML -->
     <!-- ==================== 服务器管理面板 ==================== -->
     <div class="admin-page" id="adminPage">
         <div class="admin-container">
@@ -4482,9 +4687,24 @@
                 </div>
             </div>
 
-            <!-- 管理员账户管理 -->
+            <!-- 服务器管理密码设置 -->
             <div class="admin-account-section">
-                <h3>👤 添加管理员账户</h3>
+                <h3>🔐 服务器管理密码设置</h3>
+                <div class="admin-account-form-row">
+                    <div class="admin-account-input-group" style="flex: 1;">
+                        <label>新密码</label>
+                        <input type="password" class="admin-account-input" id="serverManagerPassword" placeholder="输入新密码">
+                    </div>
+                    <button class="admin-account-btn confirm" onclick="updateServerManagerPassword()">修改密码</button>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                    此密码用于进入服务器管理面板，与管理员账号（登录窗口）不同
+                </div>
+            </div>
+
+            <!-- 管理员账户管理（用于登录窗口的管理员账号） -->
+            <div class="admin-account-section">
+                <h3>👤 管理员账户管理（登录窗口）</h3>
                 <div class="admin-account-form-row">
                     <div class="admin-account-input-group">
                         <label>管理员ID</label>
@@ -4503,7 +4723,8 @@
             </div>
         </div>
     </div>
-
+    <!--#endregion -->
+    <!--#region 管理员页面 HTML -->
     <!-- ==================== 管理员页面 ==================== -->
     <div class="manager-page" id="managerPage">
         <div class="manager-container">
@@ -4542,23 +4763,20 @@
             </div>
         </div>
     </div>
-
-
-
-    <!-- ==================== 主应用页面 ==================== -->
-
-
-
+    <!--#endregion -->
+    <!--#region 主应用页面 HTML -->
     <!-- ==================== 主应用页面 ==================== -->
     <div class="content-wrapper" style="display: none;">
         <!-- 导航按钮栏 -->
         <div class="nav-container">
             <div class="nav-buttons">
                 <button class="nav-btn active" id="navHomeBtn">主页面</button>
+                <button class="nav-btn" id="navAccountBtn">账号管理</button>
                 <button class="nav-btn" id="navSendBtn">IMessage</button>
                 <button class="nav-btn" id="navInboxBtn">收件箱
                     <div class="notification-count">0</div>
                 </button>
+                <button class="nav-btn" id="navLogoutBtn" onclick="handleLogout()">退出账号</button>
             </div>
         </div>
         <div class="main-container" style="display: none;">
@@ -4739,20 +4957,34 @@
                         </div>
                     </div>
                 </div>
+                <div style="padding: 15px; border-top: 2px solid var(--border-dark);">
+                    <button class="btn-logout" id="logoutBtn" onclick="handleLogout()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); border: 2px solid var(--border-dark); border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-family: 'Xiaolai', sans-serif; font-size: 14px; transition: all 0.3s ease;">退出账号</button>
+                </div>
+            </div>
+            <!-- 账号管理面板 -->
+            <div class="panel-e" id="panelE" style="display: none;">
+                <div class="panel-header">
+                    <span>账号管理</span>
+                </div>
+                <div class="panel-content">
+                    <!-- 账号管理内容区域 -->
+                </div>
             </div>
         </div>
     </div>
-    <!-- 隐藏的文件输入 -->
+    <!--#endregion -->
+    <!--#region 文件输入 HTML -->
     <input type="file" id="numbersFile" class="file-input" accept=".txt,.csv">
     <input type="file" id="messageFile" class="file-input" accept=".txt">
-
-
+    <!--#endregion -->
     <script>
+        //#region 登录认证模块（用户登录、管理员登录、注册）
+        // ==================== 管理员密码配置 ====================
+        // 注意：管理员密码现在存储在数据库中，不再使用硬编码
+        // 默认管理员账户：admin，初始密码：159357
 
-        // 临时管理员密码（实际应用中从后端获取）
-        const ADMIN_PASSWORD = '1';
-
-        // ==================== User/Admin 切换 ====================
+        // ==================== 用户/管理员切换 ====================
+        // 切换到用户登录表单
         function switchToUser() {
             document.getElementById('userLoginForm').style.display = 'block';
             document.getElementById('adminLoginForm').style.display = 'none';
@@ -4764,18 +4996,35 @@
             clearMessage();
         }
 
+        // 切换到管理员登录表单（双向切换）
         function switchToAdmin() {
-            document.getElementById('userLoginForm').style.display = 'none';
-            document.getElementById('adminLoginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('userToggle').classList.remove('active');
-            document.getElementById('adminToggle').classList.add('active');
-            document.getElementById('loginPanel').classList.add('admin-mode');
-            document.querySelector('.login-logo').textContent = '管理员登录';
+            const loginPanel = document.getElementById('loginPanel');
+            const adminToggle = document.getElementById('adminToggle');
+            const isAdminMode = loginPanel.classList.contains('admin-mode');
+            
+            if (isAdminMode) {
+                document.getElementById('userLoginForm').style.display = 'block';
+                document.getElementById('adminLoginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'none';
+                adminToggle.classList.remove('active');
+                loginPanel.classList.remove('admin-mode');
+                document.querySelector('.login-logo').textContent = '用户登录';
+                adminToggle.textContent = 'Admin';
+            } else {
+                document.getElementById('userLoginForm').style.display = 'none';
+                document.getElementById('adminLoginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                adminToggle.classList.add('active');
+                loginPanel.classList.add('admin-mode');
+                document.querySelector('.login-logo').textContent = '管理员登录';
+                adminToggle.textContent = 'User';
+            }
             clearMessage();
         }
 
-        // ==================== 登录/注册切换 ====================
+        //#endregion
+        //#region 登录/注册切换功能
+        // 显示注册表单
         function showRegister() {
             document.getElementById('userLoginForm').style.display = 'none';
             document.getElementById('adminLoginForm').style.display = 'none';
@@ -4783,6 +5032,7 @@
             clearMessage();
         }
 
+        // 显示登录表单
         function showLogin() {
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('adminLoginForm').style.display = 'none';
@@ -4796,14 +5046,25 @@
             msg.textContent = '';
         }
 
+        // 显示认证消息（错误消息5秒后自动清除）
         function showMessage(text, type) {
             const msg = document.getElementById('authMessage');
             msg.className = 'message-box ' + type;
             msg.textContent = text;
+            
+            if (type === 'error') {
+                if (msg._errorTimer) {
+                    clearTimeout(msg._errorTimer);
+                }
+                msg._errorTimer = setTimeout(() => {
+                    msg.className = 'message-box';
+                    msg.textContent = '';
+                    msg._errorTimer = null;
+                }, 5000);
+            }
         }
 
-        // ==================== 登录/注册处理 ====================
-        // 注意：这个函数会被后面的代码覆盖，以支持页面切换
+        // ==================== 用户登录处理 ====================
         function handleLogin() {
             const usernameEl = document.getElementById('loginUsername');
             const passwordEl = document.getElementById('loginPassword');
@@ -4825,29 +5086,21 @@
                 return;
             }
             
-            // 调用API进行登录验证
             async function doLogin() {
                 try {
                     if (typeof showMessage === 'function') {
                         showMessage('正在验证...', 'info');
                     }
                     
-                    const API_BASE_URL = 'https://autosender.up.railway.app/api';
                     const response = await fetch(`${API_BASE_URL}/login`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            username: username,
-                            password: password
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: username, password: password })
                     });
                     
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
-                        // 登录成功，保存token和用户信息
                         localStorage.setItem('user_id', data.user_id || username);
                         localStorage.setItem('auth_token', data.token);
                         localStorage.setItem('username', username);
@@ -4856,13 +5109,13 @@
                             showMessage('登录成功！正在跳转...', 'success');
                         }
                         
-                        // 切换页面
                         setTimeout(() => {
                             const loginPage = document.getElementById('loginPage');
                             const contentWrapper = document.querySelector('.content-wrapper');
                             const mainContainer = document.querySelector('.main-container');
                             
                             if (loginPage) loginPage.style.display = 'none';
+                            document.body.classList.remove('login-mode');
                             if (contentWrapper) contentWrapper.style.display = 'flex';
                             if (mainContainer) mainContainer.style.display = 'flex';
                             
@@ -4875,7 +5128,6 @@
                             }
                         }, 500);
                     } else {
-                        // 登录失败
                         const errorMsg = data.message || '登录失败，请检查用户名和密码';
                         if (typeof showMessage === 'function') {
                             showMessage(errorMsg, 'error');
@@ -4885,7 +5137,6 @@
                     }
                 } catch (error) {
                     console.error('登录错误:', error);
-                    // API服务器可能未启动，提示用户
                     const errorMsg = '无法连接到登录服务器。请先启动API服务器：python api_server.py';
                     if (typeof showMessage === 'function') {
                         showMessage(errorMsg, 'error');
@@ -4895,13 +5146,12 @@
                 }
             }
             
-            // 执行登录
             doLogin();
         }
 
-        // 将 handleLogin 挂载到 window，方便后续覆盖
         window.handleLogin = handleLogin;
 
+        // ==================== 管理员登录处理 ====================
         async function handleAdminLogin() {
             const username = document.getElementById('adminLoginUsername').value.trim();
             const password = document.getElementById('adminLoginPassword').value.trim();
@@ -4911,7 +5161,6 @@
                 return;
             }
 
-            // 检查是否是服务器管理设置的管理员
             const account = adminAccounts.find(a => a.id === username && a.password === password);
             if (account) {
                 showMessage('管理员登录成功！正在跳转...', 'success');
@@ -4919,61 +5168,308 @@
                     loginAsManager(username);
                 }, 1000);
             } else {
-                // TODO: 实际管理员登录逻辑（普通管理员登录）
-                showMessage('管理员登录成功！正在跳转...', 'success');
-                setTimeout(() => {
-                    customAlert('管理员登录成功 - 这里将跳转到管理员面板');
-                }, 1000);
+                // 普通管理员登录：通过API验证
+                async function doAdminLogin() {
+                    try {
+                        if (typeof showMessage === 'function') {
+                            showMessage('正在验证管理员身份...', 'info');
+                        }
+                        
+                        const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                username: username,
+                                password: password
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.success) {
+                            // 登录成功，保存管理员信息
+                            localStorage.setItem('admin_id', data.admin_id || username);
+                            localStorage.setItem('admin_token', data.token);
+                            localStorage.setItem('admin_username', username);
+                            
+                            showMessage('管理员登录成功！正在跳转...', 'success');
+                            setTimeout(() => {
+                                // 如果API返回了管理员权限，进入管理员面板
+                                if (data.has_manager_access) {
+                                    loginAsManager(username);
+                                } else {
+                                    // 普通管理员，显示提示
+                                    if (typeof showMessage === 'function') {
+                                        showMessage('您没有管理员面板访问权限', 'error');
+                                    }
+                                }
+                            }, 1000);
+                        } else {
+                            // 登录失败
+                            const errorMsg = data.message || '管理员登录失败，请检查用户名和密码';
+                            if (typeof showMessage === 'function') {
+                                showMessage(errorMsg, 'error');
+                            } else {
+                                alert(errorMsg);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('管理员登录错误:', error);
+                        // API服务器可能未启动，提示用户
+                        const errorMsg = '无法连接到管理员登录服务器，请确保API服务器已启动';
+                        if (typeof showMessage === 'function') {
+                            showMessage(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
+                    }
+                }
+                
+                // 执行管理员登录
+                doAdminLogin();
             }
         }
 
         function handleRegister() {
-            const username = document.getElementById('registerUsername').value.trim();
-            const password = document.getElementById('registerPassword').value.trim();
+            const usernameEl = document.getElementById('registerUsername');
+            const passwordEl = document.getElementById('registerPassword');
+            const confirmPasswordEl = document.getElementById('registerConfirmPassword');
 
-            if (!username || !password) {
-                showMessage('请输入用户名和密码', 'error');
+            if (!usernameEl || !passwordEl || !confirmPasswordEl) {
+                console.error('找不到注册输入框');
                 return;
             }
 
-            // TODO: 实际注册逻辑
-            showMessage('注册成功！请登录', 'success');
-            setTimeout(() => {
-                showLogin();
-                document.getElementById('loginUsername').value = username;
-            }, 1000);
+            const username = usernameEl.value.trim();
+            const password = passwordEl.value.trim();
+            const confirmPassword = confirmPasswordEl.value.trim();
+
+            // 验证用户名
+            if (!username) {
+                if (typeof showMessage === 'function') {
+                    showMessage('请输入用户名', 'error');
+                } else {
+                    alert('请输入用户名');
+                }
+                return;
+            }
+
+            if (username.length < 4) {
+                if (typeof showMessage === 'function') {
+                    showMessage('用户名至少需要4位', 'error');
+                } else {
+                    alert('用户名至少需要4位');
+                }
+                return;
+            }
+
+            // 验证用户名只包含字母或数字
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                if (typeof showMessage === 'function') {
+                    showMessage('用户名只能包含字母或数字', 'error');
+                } else {
+                    alert('用户名只能包含字母或数字');
+                }
+                return;
+            }
+
+            // 验证密码
+            if (!password) {
+                if (typeof showMessage === 'function') {
+                    showMessage('请输入密码', 'error');
+                } else {
+                    alert('请输入密码');
+                }
+                return;
+            }
+
+            if (password.length < 4) {
+                if (typeof showMessage === 'function') {
+                    showMessage('密码至少需要4位', 'error');
+                } else {
+                    alert('密码至少需要4位');
+                }
+                return;
+            }
+
+            // 验证确认密码
+            if (!confirmPassword) {
+                if (typeof showMessage === 'function') {
+                    showMessage('请确认密码', 'error');
+                } else {
+                    alert('请确认密码');
+                }
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                if (typeof showMessage === 'function') {
+                    showMessage('两次输入的密码不一致', 'error');
+                } else {
+                    alert('两次输入的密码不一致');
+                }
+                return;
+            }
+
+            // 调用API进行注册
+            async function doRegister() {
+                try {
+                    if (typeof showMessage === 'function') {
+                        showMessage('正在注册...', 'info');
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // 注册成功
+                        if (typeof showMessage === 'function') {
+                            showMessage('注册成功！请登录', 'success');
+                        } else {
+                            alert('注册成功！请登录');
+                        }
+
+                        // 切换到登录页面并填充用户名
+                        setTimeout(() => {
+                            if (typeof showLogin === 'function') {
+                                showLogin();
+                            }
+                            const loginUsernameEl = document.getElementById('loginUsername');
+                            if (loginUsernameEl) {
+                                loginUsernameEl.value = username;
+                            }
+                            // 清空注册表单
+                            document.getElementById('registerUsername').value = '';
+                            document.getElementById('registerPassword').value = '';
+                            document.getElementById('registerConfirmPassword').value = '';
+                        }, 1000);
+                    } else {
+                        // 注册失败
+                        const errorMsg = data.message || '注册失败，请重试';
+                        if (typeof showMessage === 'function') {
+                            showMessage(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
+                    }
+                } catch (error) {
+                    console.error('注册错误:', error);
+                    // API服务器可能未启动，提示用户
+                    const errorMsg = '无法连接到注册服务器。请先启动API服务器：python api_server.py';
+                    if (typeof showMessage === 'function') {
+                        showMessage(errorMsg, 'error');
+                    } else {
+                        alert(errorMsg);
+                    }
+                }
+            }
+
+            // 执行注册
+            doRegister();
         }
 
         // ==================== 管理员弹窗 ====================
+        // 显示管理员密码弹窗
         function showAdminModal() {
-            document.getElementById('adminModal').classList.add('show');
-            document.getElementById('adminPasswordInput').focus();
+            const modal = document.getElementById('adminModal');
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+                document.getElementById('adminPasswordInput').focus();
+            });
         }
 
+        // 关闭管理员密码弹窗
         function closeAdminModal() {
             document.getElementById('adminModal').classList.remove('show');
             document.getElementById('adminPasswordInput').value = '';
             document.getElementById('adminMessage').className = 'modal-message';
         }
 
-        function verifyAdminPassword() {
+        // 验证服务器管理密码（从数据库验证，独立于管理员账号）
+        async function verifyAdminPassword() {
             const password = document.getElementById('adminPasswordInput').value;
+            const msg = document.getElementById('adminMessage');
 
-            if (password === ADMIN_PASSWORD) {
-                closeAdminModal();
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('adminPage').classList.add('show');
-                // 初始化服务器管理页面
-                updateServerDisplay();
-                updateAdminAccountDisplay();
-            } else {
-                const msg = document.getElementById('adminMessage');
+            if (!password) {
                 msg.className = 'modal-message error';
-                msg.textContent = '密码错误，请重试';
+                msg.textContent = '请输入密码';
+                setTimeout(() => {
+                    msg.className = 'modal-message';
+                    msg.textContent = '';
+                }, 3000);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/server-manager/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeAdminModal();
+                    const loginPage = document.getElementById('loginPage');
+                    const adminPage = document.getElementById('adminPage');
+                    
+                    if (loginPage) {
+                        loginPage.style.display = 'none';
+                        document.body.classList.remove('login-mode');
+                    }
+                    
+                    if (adminPage) {
+                        adminPage.style.display = 'block';
+                        adminPage.classList.add('show');
+                        
+                        requestAnimationFrame(() => {
+                            updateServerDisplay();
+                            updateAdminAccountDisplay();
+                        });
+                    }
+                } else {
+                    msg.className = 'modal-message error';
+                    msg.textContent = data.message || '密码错误，请重试';
+                    setTimeout(() => {
+                        msg.className = 'modal-message';
+                        msg.textContent = '';
+                    }, 5000);
+                }
+            } catch (error) {
+                console.error('验证服务器管理密码失败:', error);
+                msg.className = 'modal-message error';
+                msg.textContent = '网络错误，请检查API服务器连接';
+                setTimeout(() => {
+                    msg.className = 'modal-message';
+                    msg.textContent = '';
+                }, 5000);
             }
         }
 
         async function backToLogin() {
+            // 保存服务器数据和管理员账户数据到localStorage
+            try {
+                localStorage.setItem('serverData', JSON.stringify(serverData));
+                localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+            } catch (error) {
+                console.error('保存数据失败:', error);
+            }
+            
             // 显示配置已保存对话框
             const result = await showCustomModal('配置已保存', '配置已保存', 'alert', '', [
                 { text: '返回登录界面', value: 'login' },
@@ -4981,12 +5477,36 @@
             ]);
 
             if (result === 'login') {
-                document.getElementById('adminPage').classList.remove('show');
-                document.getElementById('loginPage').style.display = 'flex';
+                const adminPage = document.getElementById('adminPage');
+                const loginPage = document.getElementById('loginPage');
+                if (adminPage) {
+                    adminPage.classList.remove('show');
+                    adminPage.style.display = 'none';
+                }
+                if (loginPage) {
+                    loginPage.style.display = 'flex';
+                    document.body.classList.add('login-mode');
+                }
             } else if (result === 'main') {
-                document.getElementById('adminPage').classList.remove('show');
-                document.getElementById('loginPage').style.display = 'flex';
-                // TODO: 跳转到主面板
+                const adminPage = document.getElementById('adminPage');
+                const loginPage = document.getElementById('loginPage');
+                if (adminPage) {
+                    adminPage.classList.remove('show');
+                    adminPage.style.display = 'none';
+                }
+                if (loginPage) {
+                    loginPage.style.display = 'none';
+                    document.body.classList.remove('login-mode');
+                }
+                // 跳转到主面板
+                if (typeof showMainApp === 'function') {
+                    showMainApp();
+                } else {
+                    const contentWrapper = document.querySelector('.content-wrapper');
+                    const mainContainer = document.querySelector('.main-container');
+                    if (contentWrapper) contentWrapper.style.display = 'flex';
+                    if (mainContainer) mainContainer.style.display = 'flex';
+                }
             }
         }
 
@@ -5009,7 +5529,27 @@
             }
         });
 
+        // 注册表单回车键支持
+        document.getElementById('registerUsername').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById('registerPassword').focus();
+            }
+        });
+
+        document.getElementById('registerPassword').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById('registerConfirmPassword').focus();
+            }
+        });
+
+        document.getElementById('registerConfirmPassword').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                handleRegister();
+            }
+        });
+
         // ==================== 显示/隐藏密码 ====================
+        // 切换密码显示/隐藏
         function togglePassword(inputId, button) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -5097,7 +5637,10 @@
                 buttonsEl.appendChild(confirmBtn);
             }
 
-            modal.classList.add('show');
+            // 使用requestAnimationFrame确保DOM更新后再显示，避免卡顿
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
 
             // 回车键确认
             const handleEnter = (e) => {
@@ -5125,11 +5668,26 @@
             const modal = document.getElementById('customModal');
             const panel = document.getElementById('customModalPanel');
             const content = document.getElementById('customModalContent');
-            modal.classList.remove('show');
-
-            // 重置样式
-            panel.className = 'custom-modal-panel';
-            content.className = 'custom-modal-content';
+            
+            // 先移除show类，触发关闭动画
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            
+            // 延迟重置样式，确保动画完成，避免飞到左上角
+            setTimeout(() => {
+                if (panel) {
+                    // 保持当前宽度类，避免宽度变化
+                    const hasAdminClass = panel.classList.contains('admin-manage-modal');
+                    panel.className = 'custom-modal-panel';
+                    if (hasAdminClass) {
+                        panel.classList.add('admin-manage-modal');
+                    }
+                }
+                if (content) {
+                    content.className = 'custom-modal-content';
+                }
+            }, 300); // 增加延迟时间，确保动画完全完成
 
             if (customModalResolve) {
                 customModalResolve(result);
@@ -5151,58 +5709,107 @@
         }
 
         // ==================== 忘记密码 ====================
+        // 处理忘记密码
         function handleForgotPassword() {
-            customAlert('忘记密码功能暂未实现，请联系管理员');
+            customAlert('请联系管理员并提供正确的用户名');
         }
 
-        // ==================== 服务器管理功能 ====================
-        // 服务器数据存储
+        //#endregion
+        //#region 服务器管理模块（API调用、服务器连接）
+        // ==================== 服务器管理 ====================
         let serverData = {
-            available: [],      // 可连接的服务器（自动发现的，未连接的）
-            connected: [],       // 已连接的服务器
-            disconnected: []     // 已断开的服务器（之前连接过，现在断开）
+            available: [],
+            connected: [],
+            disconnected: []
         };
 
-        let adminAccounts = []; // 管理员账户列表
+        let adminAccounts = [];
+        let websocketConnections = new Map();
+        let availableServersForUser = [];
+        
+        // API基础URL（全局）
+        const API_BASE_URL = 'https://autosender.up.railway.app/api';
+        
+        // 从API加载服务器列表
+        async function loadServersFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/servers`);
+                const data = await response.json();
+                if (data.success && data.servers) {
+                    serverData.available = data.servers
+                        .filter(s => s.status === 'available' && !s.assigned_user_id)
+                        .map(s => ({ name: s.server_name, url: s.server_url, server_id: s.server_id, status: 'available' }));
+                    serverData.connected = data.servers
+                        .filter(s => s.status === 'connected')
+                        .map(s => ({ name: s.server_name, url: s.server_url, server_id: s.server_id, status: 'connected' }));
+                    serverData.disconnected = data.servers
+                        .filter(s => s.status === 'disconnected')
+                        .map(s => ({ name: s.server_name, url: s.server_url, server_id: s.server_id, status: 'disconnected' }));
+                    updateServerDisplay();
+                }
+            } catch (error) {
+                console.error('加载服务器列表失败:', error);
+            }
+        }
+        
+        // 加载用户可用服务器（独享 + 公共）
+        async function loadAvailableServersForUser() {
+            if (!currentUserId) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${currentUserId}/available-servers`);
+                const data = await response.json();
+                if (data.success) {
+                    availableServersForUser = [
+                        ...data.exclusive_servers.map(s => ({
+                            server_id: s.server_id,
+                            name: s.server_name,
+                            url: s.server_url,
+                            type: 'exclusive'
+                        })),
+                        ...data.public_servers.map(s => ({
+                            server_id: s.server_id,
+                            name: s.server_name,
+                            url: s.server_url,
+                            type: 'public'
+                        }))
+                    ];
+                    connectToAvailableServers();
+                }
+            } catch (error) {
+                console.error('加载用户可用服务器失败:', error);
+            }
+        }
 
-        // 智能转换URL为WebSocket格式（支持多种输入格式）
+        // WebSocket URL格式转换（支持多种输入格式）
         function normalizeWebSocketUrl(url) {
             if (!url || typeof url !== 'string') return null;
 
             url = url.trim();
 
-            // 快捷方式1：如果只是数字，当作本地端口号
             if (/^\d+$/.test(url)) {
                 const port = parseInt(url);
                 return `ws://localhost:${port}/ws`;
             }
 
-            // 快捷方式2：如果是 "localhost:端口" 或 "127.0.0.1:端口" 格式
             if (/^(localhost|127\.0\.0\.1):\d+$/.test(url)) {
                 return `ws://${url}/ws`;
             }
 
-            // 快捷方式3：如果只是域名（没有协议），尝试智能判断
             if (!url.includes('://') && !url.startsWith('ws://') && !url.startsWith('wss://')) {
-                // 如果是 ngrok 域名格式（包含 ngrok）
                 if (url.includes('ngrok')) {
                     return `wss://${url}/ws`;
                 }
-                // 其他情况，根据当前页面协议决定
                 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
                 return `${protocol}${url}/ws`;
             }
 
-            // 如果已经是 ws:// 或 wss:// 开头，检查路径
             if (url.startsWith('ws://') || url.startsWith('wss://')) {
-                // 检查是否有 /ws 路径，没有则添加
                 try {
                     const urlObj = new URL(url);
                     if (!urlObj.pathname || urlObj.pathname === '/') {
                         url = url.endsWith('/') ? url + 'ws' : url + '/ws';
                     }
                 } catch (e) {
-                    // URL解析失败，尝试手动处理
                     if (!url.includes('/ws')) {
                         url = url.endsWith('/') ? url + 'ws' : url + '/ws';
                     }
@@ -5210,21 +5817,18 @@
                 return url;
             }
 
-            // 如果是 http:// 或 https:// 开头，转换为 ws:// 或 wss://
             if (url.startsWith('http://')) {
                 url = url.replace('http://', 'ws://');
             } else if (url.startsWith('https://')) {
                 url = url.replace('https://', 'wss://');
             }
 
-            // 确保有 /ws 路径
             try {
                 const urlObj = new URL(url);
                 if (!urlObj.pathname || urlObj.pathname === '/') {
                     url = url.endsWith('/') ? url + 'ws' : url + '/ws';
                 }
             } catch (e) {
-                // URL解析失败，尝试手动处理
                 if (!url.includes('/ws')) {
                     url = url.endsWith('/') ? url + 'ws' : url + '/ws';
                 }
@@ -5233,7 +5837,7 @@
             return url;
         }
 
-        // 连接服务器
+        // 添加服务器到全局池
         async function connectServer() {
             const name = document.getElementById('newServerName').value.trim();
             let url = document.getElementById('newServerUrl').value.trim();
@@ -5243,48 +5847,101 @@
                 return;
             }
 
-            // 智能转换URL格式（支持直接输入ngrok的http/https地址）
             url = normalizeWebSocketUrl(url);
             if (!url) {
                 await customAlert('WebSocket地址格式错误');
                 return;
             }
 
-            // 检查是否已存在
-            const exists = [...serverData.available, ...serverData.connected, ...serverData.disconnected]
-                .some(s => s.name === name || s.url === url);
+            const server_id = `server_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-            if (exists) {
-                await customAlert('该服务器已存在');
-                return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/servers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_id: server_id,
+                        server_name: name,
+                        server_url: url
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const server = { name, url, server_id, status: 'connecting' };
+                    serverData.available.push(server);
+                    document.getElementById('newServerName').value = '';
+                    document.getElementById('newServerUrl').value = '';
+                    updateServerDisplay();
+                    attemptConnect(server);
+                } else {
+                    await customAlert(data.message || '注册服务器失败');
+                }
+            } catch (error) {
+                await customAlert('注册服务器失败: ' + error.message);
             }
-
-            // 添加到可连接列表并尝试连接
-            const server = { name, url, status: 'connecting' };
-            serverData.available.push(server);
-            document.getElementById('newServerName').value = '';
-            document.getElementById('newServerUrl').value = '';
-
-            updateServerDisplay();
-            attemptConnect(server);
         }
 
         // 尝试连接服务器
         function attemptConnect(server) {
-            // TODO: 实际连接逻辑
-            setTimeout(() => {
-                // 模拟连接成功
-                const index = serverData.available.findIndex(s => s.name === server.name);
+            const wsUrl = normalizeWebSocketUrl(server.url);
+            
+            // 显示连接中状态
+            const index = serverData.available.findIndex(s => s.name === server.name);
+            if (index !== -1) {
+                server.status = 'connecting';
+                updateServerDisplay();
+            }
+            
+            // 尝试建立WebSocket连接进行验证
+            try {
+                const testWs = new WebSocket(wsUrl);
+                
+                const connectTimeout = setTimeout(() => {
+                    testWs.close();
+                    // 连接超时，标记为失败
+                    if (index !== -1) {
+                        server.status = 'available';
+                        showMessage(`连接 ${server.name} 超时`, 'error');
+                        updateServerDisplay();
+                    }
+                }, 5000);
+                
+                testWs.onopen = () => {
+                    clearTimeout(connectTimeout);
+                    testWs.close();
+                    if (index !== -1) {
+                        serverData.available.splice(index, 1);
+                        server.status = 'connected';
+                        serverData.connected.push(server);
+                        showMessage(`成功连接到 ${server.name}`, 'success');
+                        updateServerDisplay();
+                    }
+                };
+                
+                testWs.onerror = () => {
+                    clearTimeout(connectTimeout);
+                    if (index !== -1) {
+                        server.status = 'available';
+                        showMessage(`无法连接到 ${server.name}，请检查服务器地址`, 'error');
+                        updateServerDisplay();
+                    }
+                };
+                
+                testWs.onclose = () => {
+                    clearTimeout(connectTimeout);
+                };
+            } catch (error) {
+                console.error('连接错误:', error);
                 if (index !== -1) {
-                    serverData.available.splice(index, 1);
-                    server.status = 'connected';
-                    serverData.connected.push(server);
+                    server.status = 'available';
+                    showMessage(`连接 ${server.name} 失败: ${error.message}`, 'error');
                     updateServerDisplay();
                 }
-            }, 2000);
+            }
         }
 
-        // 从可连接列表连接服务器
+        // 连接可用服务器
         function connectAvailableServer(serverName) {
             const server = serverData.available.find(s => s.name === serverName);
             if (!server) return;
@@ -5294,7 +5951,7 @@
             attemptConnect(server);
         }
 
-        // 重连已断开的服务器
+        // 重连服务器
         function reconnectServer(serverName) {
             const server = serverData.disconnected.find(s => s.name === serverName);
             if (!server) return;
@@ -5309,29 +5966,30 @@
 
         // 更新服务器显示
         function updateServerDisplay() {
-            // 更新可连接服务器
             const availableContainer = document.getElementById('availableServers');
+            const availableFragment = document.createDocumentFragment();
             availableContainer.innerHTML = '';
             serverData.available.forEach(server => {
                 const btn = document.createElement('button');
                 btn.className = 'server-button' + (server.status === 'connecting' ? ' connecting' : '');
-                btn.innerHTML = `
-                    <div class="server-button-name">${server.name}</div>
-                    <div class="server-button-url">${server.url}</div>
-                `;
                 if (server.status === 'connecting') {
                     btn.innerHTML = `
                         <div class="server-button-name">连接中...</div>
                         <div class="server-button-url">${server.url}</div>
                     `;
                 } else {
+                    btn.innerHTML = `
+                        <div class="server-button-name">${server.name}</div>
+                        <div class="server-button-url">${server.url}</div>
+                    `;
                     btn.onclick = () => connectAvailableServer(server.name);
                 }
-                availableContainer.appendChild(btn);
+                availableFragment.appendChild(btn);
             });
+            availableContainer.appendChild(availableFragment);
 
-            // 更新已连接服务器
             const connectedContainer = document.getElementById('connectedServers');
+            const connectedFragment = document.createDocumentFragment();
             connectedContainer.innerHTML = '';
             serverData.connected.forEach(server => {
                 const btn = document.createElement('button');
@@ -5340,12 +5998,13 @@
                     <div class="server-button-name">${server.name}</div>
                     <div class="server-button-url">${server.url}</div>
                 `;
-                connectedContainer.appendChild(btn);
+                connectedFragment.appendChild(btn);
             });
+            connectedContainer.appendChild(connectedFragment);
             document.getElementById('connectedCount').textContent = `(${serverData.connected.length})`;
 
-            // 更新已断开服务器
             const disconnectedContainer = document.getElementById('disconnectedServers');
+            const disconnectedFragment = document.createDocumentFragment();
             disconnectedContainer.innerHTML = '';
             serverData.disconnected.forEach(server => {
                 const btn = document.createElement('button');
@@ -5359,8 +6018,9 @@
                 reconnectBtn.textContent = '重连';
                 reconnectBtn.onclick = () => reconnectServer(server.name);
                 btn.appendChild(reconnectBtn);
-                disconnectedContainer.appendChild(btn);
+                disconnectedFragment.appendChild(btn);
             });
+            disconnectedContainer.appendChild(disconnectedFragment);
             document.getElementById('disconnectedCount').textContent = `(${serverData.disconnected.length})`;
         }
 
@@ -5380,6 +6040,32 @@
             }
 
             adminAccounts.push({ id, password });
+            
+            try {
+                localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+            } catch (error) {
+                console.error('保存管理员账号到localStorage失败:', error);
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/account`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        admin_id: id,
+                        password: password
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.warn('保存管理员账号到数据库失败，但已保存到本地');
+                }
+            } catch (error) {
+                console.warn('无法连接到API服务器保存管理员账号，但已保存到本地:', error);
+            }
+            
             document.getElementById('newAdminId').value = '';
             document.getElementById('newAdminPassword').value = '';
             updateAdminAccountDisplay();
@@ -5388,6 +6074,38 @@
         function cancelAddAdmin() {
             document.getElementById('newAdminId').value = '';
             document.getElementById('newAdminPassword').value = '';
+        }
+
+        // ==================== 服务器管理密码设置 ====================
+        async function updateServerManagerPassword() {
+            const password = document.getElementById('serverManagerPassword').value.trim();
+            
+            if (!password) {
+                await customAlert('请输入新密码');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/server-manager/password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await customAlert('服务器管理密码已更新');
+                    document.getElementById('serverManagerPassword').value = '';
+                } else {
+                    await customAlert(data.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新服务器管理密码失败:', error);
+                await customAlert('网络错误，请检查API服务器连接');
+            }
         }
 
         async function editAdminAccount(adminId) {
@@ -5404,13 +6122,28 @@
         async function deleteAdminAccount(adminId) {
             const confirmed = await customConfirm('确定要删除该管理员账户吗？');
             if (confirmed) {
-                adminAccounts = adminAccounts.filter(a => a.id !== adminId);
-                updateAdminAccountDisplay();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/account/${adminId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        adminAccounts = adminAccounts.filter(a => a.id !== adminId);
+                        updateAdminAccountDisplay();
+                    } else {
+                        const errorData = await response.json();
+                        await customAlert(errorData.message || '删除管理员账号失败');
+                    }
+                } catch (error) {
+                    await customAlert('无法连接到API服务器: ' + error.message);
+                }
             }
         }
 
         function updateAdminAccountDisplay() {
             const container = document.getElementById('adminAccountList');
+            const fragment = document.createDocumentFragment();
             container.innerHTML = '';
             adminAccounts.forEach(account => {
                 const item = document.createElement('div');
@@ -5425,8 +6158,9 @@
                         <button class="admin-account-action-btn manage" onclick="manageAdminAccount('${account.id}')">管理</button>
                     </div>
                 `;
-                container.appendChild(item);
+                fragment.appendChild(item);
             });
+            container.appendChild(fragment);
         }
 
         // 管理管理员账户
@@ -5434,18 +6168,15 @@
             const account = adminAccounts.find(a => a.id === adminId);
             if (!account) return;
 
-            // 初始化账户数据
             if (!account.maxUsers) account.maxUsers = 0;
             if (!account.selectedServers) account.selectedServers = [];
 
-            // 获取所有可用服务器
             const allServers = [
                 ...serverData.available,
                 ...serverData.connected,
                 ...serverData.disconnected
             ].map(s => s.name);
 
-            // 显示管理对话框
             const panel = document.getElementById('customModalPanel');
             panel.classList.add('admin-manage-modal');
 
@@ -5502,7 +6233,9 @@
             `;
 
             const modal = document.getElementById('customModal');
-            modal.classList.add('show');
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
         }
 
         function toggleServerSelection(adminId, serverName, button) {
@@ -5553,6 +6286,37 @@
 
             const maxUsers = parseInt(document.getElementById('adminMaxUsers').value) || 0;
             account.maxUsers = maxUsers;
+            
+            const grid = document.getElementById('adminManageServersGrid');
+            if (grid) {
+                const selectedButtons = grid.querySelectorAll('.admin-manage-server-btn.selected');
+                account.selectedServers = Array.from(selectedButtons).map(btn => btn.textContent.trim());
+            }
+
+            try {
+                localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+            } catch (error) {
+                console.error('保存管理员账号到localStorage失败:', error);
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/account/${adminId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        max_users: account.maxUsers,
+                        selected_servers: account.selectedServers || []
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.warn('保存管理员账号配置到数据库失败，但已保存到本地');
+                }
+            } catch (error) {
+                console.warn('无法连接到API服务器保存管理员账号配置，但已保存到本地:', error);
+            }
 
             closeCustomModal();
             updateAdminAccountDisplay();
@@ -5565,26 +6329,58 @@
             const newPassword = await customPrompt('请输入新密码:', account.password);
             if (newPassword && newPassword.trim()) {
                 account.password = newPassword.trim();
-                // 重新打开管理对话框
-                manageAdminAccount(adminId);
+                // 保存修改
+                try {
+                    localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+                } catch (error) {
+                    console.error('保存管理员账号失败:', error);
+                }
+                // 延迟重新打开管理对话框，确保之前的弹窗完全关闭
+                setTimeout(() => {
+                    manageAdminAccount(adminId);
+                }, 350);
             }
         }
 
         async function deleteAdminInModal(adminId) {
             const confirmed = await customConfirm('确定要删除该管理员账户吗？');
             if (confirmed) {
+                // 从本地数组删除
                 adminAccounts = adminAccounts.filter(a => a.id !== adminId);
+                
+                // 保存到localStorage
+                try {
+                    localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+                } catch (error) {
+                    console.error('保存管理员账号到localStorage失败:', error);
+                }
+                
+                // 尝试从数据库删除（API）
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/account/${adminId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        console.warn('从数据库删除管理员账号失败，但已从本地删除');
+                    }
+                } catch (error) {
+                    console.warn('无法连接到API服务器删除管理员账号，但已从本地删除:', error);
+                }
+                
                 closeCustomModal();
                 updateAdminAccountDisplay();
             }
         }
 
-        // 页面加载时初始化
-        if (document.getElementById('adminPage')) {
-            updateServerDisplay();
-            updateAdminAccountDisplay();
-        }
+        // 页面加载时不初始化（页面还未显示，避免不必要的DOM操作）
+        // 只在真正打开服务器管理页面时才初始化
 
+        //#endregion
+        //#region 管理员页面功能模块（用户管理、服务器分配）
         // ==================== 管理员页面功能 ====================
         let currentManagerId = null;
         let managerUsers = [];
@@ -5592,7 +6388,7 @@
         let currentGroupCreation = null;
 
         // 管理员登录后进入管理员页面
-        function loginAsManager(managerId) {
+        async function loginAsManager(managerId) {
             const account = adminAccounts.find(a => a.id === managerId);
             if (!account) {
                 customAlert('管理员账户不存在');
@@ -5602,6 +6398,7 @@
             currentManagerId = managerId;
             document.getElementById('managerIdDisplay').textContent = managerId;
             document.getElementById('loginPage').style.display = 'none';
+            document.body.classList.remove('login-mode');
             document.getElementById('managerPage').classList.add('show');
 
             // 初始化数据
@@ -5610,6 +6407,13 @@
             managerUsers = account.users || [];
             managerUserGroups = account.userGroups || [];
 
+            // 先加载服务器数据，再更新显示
+            try {
+                await loadServersFromAPI();
+            } catch (error) {
+                console.error('加载服务器数据失败:', error);
+            }
+            
             updateManagerDisplay();
         }
 
@@ -5625,6 +6429,7 @@
 
             document.getElementById('managerPage').classList.remove('show');
             document.getElementById('loginPage').style.display = 'flex';
+            document.body.classList.add('login-mode');
             // 跳转到主页面
             customAlert('已保存设置，进入主页面');
         }
@@ -5648,7 +6453,6 @@
 
         function removeUser(userId) {
             managerUsers = managerUsers.filter(u => u !== userId);
-            // 同时删除该用户的所有分组
             managerUserGroups = managerUserGroups.filter(g => g.userId !== userId);
             updateManagerDisplay();
         }
@@ -5692,24 +6496,55 @@
             updateManagerDisplay();
         }
 
-        function confirmGroupCreation() {
+        async function confirmGroupCreation() {
             if (!currentGroupCreation || !currentGroupCreation.userId) {
-                customAlert('请选择用户');
+                await customAlert('请选择用户');
                 return;
             }
 
             if (currentGroupCreation.selectedServers.length === 0) {
-                customAlert('请至少选择一个服务器');
+                await customAlert('请至少选择一个服务器');
                 return;
             }
 
-            // 保存分组
-            managerUserGroups.push({
-                userId: currentGroupCreation.userId,
-                servers: [...currentGroupCreation.selectedServers]
-            });
+            const allServers = [
+                ...serverData.available,
+                ...serverData.connected,
+                ...serverData.disconnected
+            ];
+
+            for (const serverName of currentGroupCreation.selectedServers) {
+                const server = allServers.find(s => s.name === serverName);
+                if (server && server.server_id) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/servers/${server.server_id}/assign`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                user_id: currentGroupCreation.userId
+                            })
+                        });
+                        if (!response.ok) {
+                            console.error(`分配服务器 ${serverName} 失败`);
+                        }
+                    } catch (error) {
+                        console.error(`分配服务器 ${serverName} 失败:`, error);
+                    }
+                }
+            }
+
+            const existingGroup = managerUserGroups.find(g => g.userId === currentGroupCreation.userId);
+            if (existingGroup) {
+                existingGroup.servers = [...currentGroupCreation.selectedServers];
+            } else {
+                managerUserGroups.push({
+                    userId: currentGroupCreation.userId,
+                    servers: [...currentGroupCreation.selectedServers]
+                });
+            }
 
             currentGroupCreation = null;
+            await loadServersFromAPI();
             updateManagerDisplay();
         }
 
@@ -5730,13 +6565,36 @@
             updateManagerDisplay();
         }
 
-        function deleteUserGroup(userId) {
+        async function deleteUserGroup(userId) {
+            const group = managerUserGroups.find(g => g.userId === userId);
+            if (group) {
+                const allServers = [
+                    ...serverData.available,
+                    ...serverData.connected,
+                    ...serverData.disconnected
+                ];
+                
+                for (const serverName of group.servers) {
+                    const server = allServers.find(s => s.name === serverName);
+                    if (server && server.server_id) {
+                        try {
+                            await fetch(`${API_BASE_URL}/servers/${server.server_id}/unassign`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                        } catch (error) {
+                            console.error(`取消分配服务器 ${serverName} 失败:`, error);
+                        }
+                    }
+                }
+            }
+            
             managerUserGroups = managerUserGroups.filter(g => g.userId !== userId);
+            await loadServersFromAPI();
             updateManagerDisplay();
         }
 
         function updateManagerDisplay() {
-            // 更新用户列表
             const userList = document.getElementById('userList');
             userList.innerHTML = '';
             managerUsers.forEach(userId => {
@@ -5749,7 +6607,6 @@
                 userList.appendChild(item);
             });
 
-            // 更新可用服务器
             const allServers = [
                 ...serverData.available,
                 ...serverData.connected,
@@ -5759,13 +6616,11 @@
             const availableContainer = document.getElementById('managerAvailableServers');
             availableContainer.innerHTML = '';
 
-            // 获取所有已分配的服务器
             const assignedServers = new Set();
             managerUserGroups.forEach(group => {
                 group.servers.forEach(s => assignedServers.add(s));
             });
 
-            // 显示未分配的服务器（在创建分组时，显示所有服务器供选择）
             const serversToShow = currentGroupCreation
                 ? allServers.filter(s => !assignedServers.has(s.name) || currentGroupCreation.selectedServers.includes(s.name))
                 : allServers.filter(s => !assignedServers.has(s.name));
@@ -5922,11 +6777,68 @@
                     loginAsManager(username);
                 }, 1000);
             } else {
-                // TODO: 实际管理员登录逻辑（普通管理员登录）
-                showMessage('管理员登录成功！正在跳转...', 'success');
-                setTimeout(() => {
-                    customAlert('管理员登录成功 - 这里将跳转到管理员面板');
-                }, 1000);
+                // 普通管理员登录：通过API验证
+                async function doAdminLogin() {
+                    try {
+                        if (typeof showMessage === 'function') {
+                            showMessage('正在验证管理员身份...', 'info');
+                        }
+                        
+                        const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                username: username,
+                                password: password
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.success) {
+                            // 登录成功，保存管理员信息
+                            localStorage.setItem('admin_id', data.admin_id || username);
+                            localStorage.setItem('admin_token', data.token);
+                            localStorage.setItem('admin_username', username);
+                            
+                            showMessage('管理员登录成功！正在跳转...', 'success');
+                            setTimeout(() => {
+                                // 如果API返回了管理员权限，进入管理员面板
+                                if (data.has_manager_access) {
+                                    loginAsManager(username);
+                                } else {
+                                    // 普通管理员，显示提示
+                                    if (typeof showMessage === 'function') {
+                                        showMessage('您没有管理员面板访问权限', 'error');
+                                    }
+                                }
+                            }, 1000);
+                        } else {
+                            // 登录失败
+                            const errorMsg = data.message || '管理员登录失败，请检查用户名和密码';
+                            if (typeof showMessage === 'function') {
+                                showMessage(errorMsg, 'error');
+                            } else {
+                                alert(errorMsg);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('管理员登录错误:', error);
+                        // API服务器可能未启动或网络错误，显示登录失败
+                        const errorMsg = '管理员登录失败：无法连接到服务器，请检查网络连接或联系管理员';
+                        if (typeof showMessage === 'function') {
+                            showMessage(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
+                        return; // 重要：登录失败时直接返回，不继续执行
+                    }
+                }
+                
+                // 执行管理员登录
+                await doAdminLogin();
             }
         };
 
@@ -5962,7 +6874,7 @@
         // 用户系统相关
         let currentUserId = null;
         let authToken = null;
-        const API_BASE_URL = 'https://autosender.up.railway.app/api'; // API服务器地址
+        // API_BASE_URL已在全局定义
         const TEST_MODE = false; // 测试模式：true=绕过API，使用本地模拟数据；false=使用真实API
 
         // 更新用户信息显示
@@ -6012,14 +6924,8 @@
             currentUserId = localStorage.getItem('user_id');
             authToken = localStorage.getItem('auth_token');
             if (!currentUserId || !authToken) {
-                // 跳转到登录页面
-                // 已合并到同一页面，直接显示登录页面
-                if (typeof showLoginPage === 'function') {
-                    showLoginPage();
-                } else {
-                    // 如果函数不存在，显示提示
-                    alert('请先登录');
-                }
+                // 不自动跳转，只返回false，让调用者决定是否跳转
+                // 这样可以避免主面板在初始化时被意外隐藏
                 return false;
             }
             return true;
@@ -6171,59 +7077,40 @@
         }
 
         // WebSocket 连接
-        function connectWebSocket() {
-            // 检查登录状态
-            if (!checkAuth()) {
+        // 连接到用户可用的所有服务器（多服务器连接）
+        async function connectToAvailableServers() {
+            if (!checkAuth()) return;
+            
+            // 关闭所有现有连接
+            websocketConnections.forEach((ws, serverId) => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            });
+            websocketConnections.clear();
+            
+            // 加载用户可用服务器
+            await loadAvailableServersForUser();
+            
+            if (availableServersForUser.length === 0) {
+                showNotification('没有可用的服务器', 'error');
                 return;
             }
-
-            // 优先从URL参数获取WebSocket地址（方便临时测试）
-            const urlParams = new URLSearchParams(window.location.search);
-            let wsUrl = urlParams.get('ws');
-
-            // 如果URL参数中有ws地址，保存到localStorage以便下次使用
-            if (wsUrl) {
-                wsUrl = normalizeWebSocketUrl(wsUrl);
-                if (wsUrl) {
-                    localStorage.setItem('websocket_url', wsUrl);
-                }
-            }
-
-            if (!wsUrl) {
-                // 从localStorage获取用户配置的后端服务器列表
-                const userBackends = JSON.parse(localStorage.getItem('user_backends') || '[]');
-                if (userBackends.length > 0) {
-                    // 使用第一个启用的后端
-                    const enabledBackend = userBackends.find(b => b.enabled);
-                    if (enabledBackend) {
-                        wsUrl = normalizeWebSocketUrl(enabledBackend.url);
-                    }
-                }
-
-                // 如果还没有，从localStorage获取之前保存的WebSocket地址
-                if (!wsUrl) {
-                    const savedUrl = localStorage.getItem('websocket_url');
-                    if (savedUrl) {
-                        wsUrl = normalizeWebSocketUrl(savedUrl);
-                    }
-                }
-
-                // 如果还是没有，使用默认（保持向后兼容）
-                if (!wsUrl) {
-                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                    // 默认地址可以在这里修改，或者通过URL参数 ?ws=xxx 传入
-                    wsUrl = `${protocol}//askew-embraceable-lavenia.ngrok-free.dev/ws`;
-                }
-            }
-
-            // 最终规范化URL
-            wsUrl = normalizeWebSocketUrl(wsUrl);
-
-            try {
-                if (!ws || ws.readyState === WebSocket.CLOSED) {
-                    ws = new WebSocket(wsUrl);
+            
+            // 连接到所有可用服务器
+            let connectedCount = 0;
+            for (const server of availableServersForUser) {
+                try {
+                    const wsUrl = normalizeWebSocketUrl(server.url);
+                    if (!wsUrl) continue;
+                    
+                    const ws = new WebSocket(wsUrl);
+                    
                     ws.onopen = () => {
-                        // 发送用户身份信息
+                        websocketConnections.set(server.server_id, ws);
+                        connectedCount++;
+                        
+                        // 发送身份验证
                         if (currentUserId && authToken) {
                             ws.send(JSON.stringify({
                                 action: 'authenticate',
@@ -6233,40 +7120,57 @@
                                 }
                             }));
                         }
-                        updateConnectionStatus(true);
-                        showNotification('已连接', 'success');
-                        if (reconnectTimer) clearTimeout(reconnectTimer);
+                        
+                        // 更新连接状态
+                        if (connectedCount === 1) {
+                            updateConnectionStatus(true);
+                            showNotification(`已连接 ${connectedCount}/${availableServersForUser.length} 个服务器`, 'success');
+                        } else {
+                            showNotification(`已连接 ${connectedCount}/${availableServersForUser.length} 个服务器`, 'info');
+                        }
                     };
+                    
                     ws.onmessage = (event) => {
                         try {
                             const data = JSON.parse(event.data);
-                            // 处理认证成功消息
                             if (data.type === 'authenticated') {
-                                showNotification(`身份验证成功，当前积分: ${data.credits}`, 'success');
-                                // 更新用户信息显示
-                                updateUserInfoDisplay(data.credits);
-                                // 加载用户的后端服务器列表
-                                loadUserBackends();
+                                if (connectedCount === 1) {
+                                    showNotification(`身份验证成功，当前积分: ${data.credits}`, 'success');
+                                    updateUserInfoDisplay(data.credits);
+                                }
                             }
-                            handleServerMessage(data);
+                            handleServerMessage(data, server.server_id);
                         } catch (e) {
                             console.error('解析消息失败:', e);
                         }
                     };
-                    ws.onerror = (error) => { };
-                    ws.onclose = () => {
-                        updateConnectionStatus(false);
-                        resetInboxOnConnect();
-                        if (reconnectTimer) clearTimeout(reconnectTimer);
-                        reconnectTimer = setTimeout(() => { connectWebSocket(); }, 3000);
+                    
+                    ws.onerror = (error) => {
+                        console.error(`服务器 ${server.name} 连接错误:`, error);
                     };
+                    
+                    ws.onclose = () => {
+                        websocketConnections.delete(server.server_id);
+                        if (websocketConnections.size === 0) {
+                            updateConnectionStatus(false);
+                            reconnectTimer = setTimeout(() => { connectToAvailableServers(); }, 3000);
+                        }
+                    };
+                } catch (e) {
+                    console.error(`连接服务器 ${server.name} 失败:`, e);
                 }
-            } catch (e) {
-                updateConnectionStatus(false);
             }
         }
+        
+        // 单服务器连接（兼容旧代码）
+        function connectWebSocket() {
+            connectToAvailableServers();
+        }
 
-        function handleServerMessage(data) {
+        //#endregion
+        //#region WebSocket 连接和消息处理模块
+        // ==================== WebSocket消息处理 ====================
+        function handleServerMessage(data, serverId = null) {
             if (!data || typeof data !== 'object') return;
 
             if (data.type === 'status_update') {
@@ -6277,9 +7181,7 @@
                 }
                 addStatusMessage(data.message, data.message_type || 'info');
 
-                // 解析统计信息（从消息中提取）
                 if (data.message && typeof data.message === 'string') {
-                    // 提取用时（从"发送完成 用时: X秒"消息中）
                     const timeMatch = data.message.match(/发送完成\s+用时:\s*(\d+)秒/i);
                     if (timeMatch) {
                         const timeUsed = parseInt(timeMatch[1]) || 0;
@@ -6289,17 +7191,12 @@
                         }
                     }
 
-                    // 匹配格式: "Total: {total_messages} numbers: {phone_count} Success: {success} Failed: {fail} 成功率 {success}/{phone_count}({rate}%)"
                     const statsMatch = data.message.match(/Total:\s*(\d+)\s+numbers:\s*(\d+)\s+Success:\s*(\d+)\s+Failed:\s*(\d+)/i);
                     if (statsMatch) {
                         const totalMessages = parseInt(statsMatch[1]) || 0;
                         const phoneCount = parseInt(statsMatch[2]) || 0;
                         const success = parseInt(statsMatch[3]) || 0;
                         const fail = parseInt(statsMatch[4]) || 0;
-                        // 号码数量已在startSending时从numbersText中提取并去重
-                        // 这里不需要再次累加，因为已经在发送时处理了
-                        // globalStats.totalPhoneCount 已经在startSending中更新为sentPhoneNumbers.size
-                        // 统计时按消息条数累计：成功号码数 × 消息条数，失败号码数 × 消息条数
                         const messageCount = phoneCount > 0 ? Math.floor(totalMessages / phoneCount) : 1;
                         const successMessages = success * messageCount;
                         const failMessages = fail * messageCount;
@@ -6307,7 +7204,6 @@
                             updateGlobalStats(totalMessages, successMessages, failMessages);
                         }
                     } else {
-                        // 备用解析：尝试其他格式（兼容旧格式）
                         const successMatch = data.message.match(/Success[：:]\s*(\d+)/i);
                         const failMatch = data.message.match(/Failed[：:]\s*(\d+)/i);
                         const totalMatch = data.message.match(/Total[：:]\s*(\d+)/i);
@@ -6323,7 +7219,6 @@
                     }
                 }
             } else if (data.type === 'connected') {
-                // WebSocket 连接成功，已经在 onopen 时清空了，这里不需要再清空
             } else if (data.type === 'initial_chats') {
                 updateContactList(data.data);
             } else if (data.type === 'new_messages') {
@@ -6591,18 +7486,58 @@
             }
         }
 
+        //#endregion
+        //#region 发送功能模块（A版面板 - 发送消息）
+        // 发送命令到所有连接的服务器（智能分配）
         function sendCommand(action, data = {}) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
+            if (websocketConnections.size === 0) {
                 return false;
             }
+            
             const command = { action: action, data: data };
-            ws.send(JSON.stringify(command));
-            return true;
+            const commandStr = JSON.stringify(command);
+            
+            // 发送到所有连接的服务器
+            let sentCount = 0;
+            websocketConnections.forEach((ws, serverId) => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(commandStr);
+                    sentCount++;
+                }
+            });
+            
+            return sentCount > 0;
+        }
+        
+        // 智能分配任务到多个服务器
+        function sendCommandToServers(action, data = {}, serverIds = null) {
+            if (websocketConnections.size === 0) {
+                return false;
+            }
+            
+            const command = { action: action, data: data };
+            const commandStr = JSON.stringify(command);
+            
+            // 如果指定了服务器ID，只发送到指定的服务器
+            if (serverIds && Array.isArray(serverIds)) {
+                let sentCount = 0;
+                serverIds.forEach(serverId => {
+                    const ws = websocketConnections.get(serverId);
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(commandStr);
+                        sentCount++;
+                    }
+                });
+                return sentCount > 0;
+            }
+            
+            // 否则发送到所有服务器
+            return sendCommand(action, data);
         }
 
-        // 发送功能
+        //#endregion
+        //#region 发送任务处理
         async function startSending() {
-            // 检查登录状态
             if (!checkAuth()) {
                 return;
             }
@@ -6634,13 +7569,54 @@
             const phoneCountEl = document.getElementById('phoneCount');
             if (phoneCountEl) phoneCountEl.textContent = globalStats.totalPhoneCount;
 
-            // 发送时带上用户ID
+            // 智能分配任务到多个服务器（phoneList已在上面定义）
+            // 获取可用服务器列表
+            const activeServers = Array.from(websocketConnections.keys())
+                .map(serverId => {
+                    const ws = websocketConnections.get(serverId);
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        const server = availableServersForUser.find(s => s.server_id === serverId);
+                        return server ? server : null;
+                    }
+                    return null;
+                })
+                .filter(s => s !== null);
+            
+            if (activeServers.length === 0) {
+                showNotification('没有可用的服务器连接', 'error');
+                return;
+            }
+            
+            // 平均分配任务到各个服务器
+            const phonesPerServer = Math.ceil(phoneList.length / activeServers.length);
+            let phoneIndex = 0;
+            
+            for (let i = 0; i < activeServers.length && phoneIndex < phoneList.length; i++) {
+                const server = activeServers[i];
+                const serverPhones = phoneList.slice(phoneIndex, phoneIndex + phonesPerServer);
+                phoneIndex += phonesPerServer;
+                
+                if (serverPhones.length > 0) {
+                    const serverMessageCount = Math.ceil(getStringLength(message) / 160) || 1;
+                    
+                    // 发送到特定服务器
+                    sendCommandToServers('start_sending', {
+                        numbers: serverPhones.join('\n'),
+                        message: message,
+                        interval: interval,
+                        message_count: serverMessageCount,
+                        user_id: currentUserId
+                    }, [server.server_id]);
+                }
+            }
+            
+            // 更新统计（使用原始完整列表）
             if (sendCommand('start_sending', {
                 numbers: numbers,
                 message: message,
                 interval: interval,
                 message_count: messageCount,
-                user_id: currentUserId  // 添加用户ID
+                user_id: currentUserId
             })) {
                 isSending = true;
                 updateButtonState();
@@ -6656,10 +7632,10 @@
                 sendBtn.textContent = '发送';
             }
         }
-
+        //#endregion
+        //#region 收件箱模块（C版面板 - 消息接收和回复）
         // 更新通知计数
         function updateNotificationCount() {
-            // 更新左侧收件箱按钮的通知计数
             const navInboxBtn = document.getElementById('navInboxBtn');
             let notificationCountEl = null;
             if (navInboxBtn) {
@@ -6678,7 +7654,6 @@
                 }
             }
 
-            // 更新收件箱统计显示
             updateInboxStats();
         }
 
@@ -6695,9 +7670,9 @@
 
             currentChatId = null;
             unreadChatIds.clear();
-            inboxMessageStats = {}; // 重置收件箱统计
-            updateNotificationCount(); // 更新通知计数
-            updateInboxStats(); // 更新收件箱统计显示
+            inboxMessageStats = {};
+            updateNotificationCount();
+            updateInboxStats();
             const replyInput = document.getElementById('replyInput');
             if (replyInput) {
                 replyInput.disabled = true;
@@ -6708,11 +7683,9 @@
             }
         }
 
-        // 存储所有对话的消息统计
-        let inboxMessageStats = {}; // {chat_id: {received: 0, sent: 0}}
+        let inboxMessageStats = {};
 
         function updateInboxStats() {
-            // 统计所有对话的消息
             let totalReceived = 0;
             let totalSent = 0;
             Object.values(inboxMessageStats).forEach(stats => {
@@ -6727,22 +7700,16 @@
                 inboxStatsEl.textContent = `接收: ${totalReceived}  发送: ${totalSent}  总数: ${total}`;
             }
 
-            // 更新全局统计（只用于总数量计算）
             globalStats.inboxReceived = totalReceived;
             globalStats.inboxSent = totalSent;
-            globalStats.inboxTotal = total; // 收件箱总数（接收+发送）
+            globalStats.inboxTotal = total;
 
-            // 更新B版统计显示
-            // 总数量 = A版发送数量 + C版总数（接收+发送）
             const totalCount = globalStats.totalSent + globalStats.inboxTotal;
-            // 成功/失败/成功率：只统计A版发送任务的结果，与C版无关
             const totalAll = globalStats.totalSuccess + globalStats.totalFail;
             const successRate = totalAll > 0 ? (globalStats.totalSuccess / totalAll * 100) : 0;
 
-            // 更新总号码数（从Set中获取，确保去重）
             globalStats.totalPhoneCount = sentPhoneNumbers.size;
 
-            // 更新桌面端B版显示
             document.getElementById('taskCount').textContent = globalStats.taskCount;
             document.getElementById('phoneCount').textContent = globalStats.totalPhoneCount;
             document.getElementById('totalSentCount').textContent = totalCount;
@@ -6750,7 +7717,6 @@
             document.getElementById('failCount').textContent = globalStats.totalFail;
             document.getElementById('successRate').textContent = `${successRate.toFixed(1)}%`;
 
-            // 同步更新移动端B版显示
             const taskCountMobile = document.getElementById('taskCountMobile');
             const phoneCountMobile = document.getElementById('phoneCountMobile');
             const totalSentCountMobile = document.getElementById('totalSentCountMobile');
@@ -6773,9 +7739,8 @@
 
             if (!chats || chats.length === 0) {
                 contactList.innerHTML = '<div style="font-family: \'Xiaolai\', sans-serif; text-align:center; color:rgba(47,47,47,0.5); padding:20px; font-size:14px;">暂无对话</div><button class="btn-clear-inbox" id="clearInboxBtn" title="全部删除">全部删除</button>';
-                updateNotificationCount(); // 更新通知计数
-                updateInboxStats(); // 更新收件箱统计
-                // 重新绑定按钮事件
+                updateNotificationCount();
+                updateInboxStats();
                 document.getElementById('clearInboxBtn').addEventListener('click', clearInbox);
                 return;
             }
@@ -6796,7 +7761,6 @@
                 if (chat.chat_id === currentChatId) {
                     contactItem.classList.add('active');
                 }
-                // 如果有未读消息且不是当前对话，添加未读标记
                 if (unreadChatIds.has(chat.chat_id) && chat.chat_id !== currentChatId) {
                     contactItem.classList.add('unread');
                 }
@@ -6816,7 +7780,6 @@
 
             contactList.innerHTML = '';
             contactList.appendChild(fragment);
-            // 添加清空按钮
             const clearBtn = document.createElement('button');
             clearBtn.className = 'btn-clear-inbox';
             clearBtn.id = 'clearInboxBtn';
@@ -6825,18 +7788,16 @@
             clearBtn.addEventListener('click', clearInbox);
             contactList.appendChild(clearBtn);
 
-            // 自动获取所有对话的统计信息
             chats.forEach(chat => {
                 if (!inboxMessageStats[chat.chat_id]) {
-                    // 如果还没有统计信息，请求对话数据以获取统计
                     requestConversationForStats(chat.chat_id);
                 }
             });
 
-            updateInboxStats(); // 更新收件箱统计
+            updateInboxStats();
         }
 
-        // 请求对话数据仅用于统计（不显示）
+        // 请求对话数据用于统计
         function requestConversationForStats(chatId) {
             sendCommand('get_conversation', { chat_id: chatId });
         }
@@ -6845,7 +7806,7 @@
             if (currentChatId === chatId) return;
             currentChatId = chatId;
             unreadChatIds.delete(chatId);
-            updateNotificationCount(); // 更新通知计数
+            updateNotificationCount();
             document.querySelectorAll('.contact-item').forEach(item => {
                 item.classList.remove('active', 'unread');
                 if (item.dataset.chatId === chatId) {
@@ -6975,17 +7936,14 @@
             conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
             replyInput.value = '';
 
-            // 记录C版发送过的号码（用于总号码统计）
             if (currentChatId && !sentPhoneNumbers.has(currentChatId)) {
                 sentPhoneNumbers.add(currentChatId);
                 globalStats.totalPhoneCount = sentPhoneNumbers.size;
                 updateInlineStats();
-                // 更新B版显示
                 const phoneCountEl = document.getElementById('phoneCount');
                 if (phoneCountEl) phoneCountEl.textContent = globalStats.totalPhoneCount;
             }
 
-            // 更新统计（临时消息，等待服务器确认后会更新）
             if (!inboxMessageStats[currentChatId]) {
                 inboxMessageStats[currentChatId] = { received: 0, sent: 0 };
             }
@@ -6997,38 +7955,31 @@
 
         // 显示通知消息
         function showNotification(message, type = 'info') {
-            // 简单的控制台输出，或者可以扩展为显示UI通知
             console.log(`[${type.toUpperCase()}] ${message}`);
-            // 如果需要UI通知，可以在这里添加
         }
 
         function showNewMessageNotification(chatId, senderName, messagePreview) {
             console.log('showNewMessageNotification called:', chatId, senderName);
-            // 移除旧的气泡提醒
             const oldBubble = document.querySelector('.message-bubble-notification');
             if (oldBubble) {
                 oldBubble.remove();
             }
 
-            // 创建新的气泡提醒
             const bubble = document.createElement('div');
             bubble.className = 'message-bubble-notification';
             bubble.innerHTML = `📨 新消息: ${senderName}`;
 
-            // 计算清空按钮的位置
             const clearBtn = document.getElementById('clearLogsBtn');
             if (clearBtn) {
                 const rect = clearBtn.getBoundingClientRect();
                 bubble.style.top = `${rect.top - 50}px`;
             } else {
-                // 如果找不到清空按钮，使用默认位置
                 bubble.style.top = '50%';
             }
 
             document.body.appendChild(bubble);
             console.log('Bubble notification created and added to DOM');
 
-            // 3秒后自动移除
             setTimeout(() => {
                 if (bubble && bubble.parentNode) {
                     bubble.remove();
@@ -7037,7 +7988,6 @@
         }
 
         function updateGlobalStats(total = 0, success = 0, fail = 0) {
-            // 只有在有实际任务数据时才增加任务计数
             if (total > 0 || success > 0 || fail > 0) {
                 globalStats.taskCount++;
             }
@@ -7045,17 +7995,13 @@
             globalStats.totalSuccess += success;
             globalStats.totalFail += fail;
 
-            // 成功/失败/成功率：只统计A版发送任务的结果，与C版无关
             const totalAll = globalStats.totalSuccess + globalStats.totalFail;
             const successRate = totalAll > 0 ? (globalStats.totalSuccess / totalAll * 100) : 0;
 
-            // 计算总数量（A版发送数量 + C版总数）
             const totalCount = globalStats.totalSent + globalStats.inboxTotal;
 
-            // 更新总号码数（从Set中获取，确保去重）
             globalStats.totalPhoneCount = sentPhoneNumbers.size;
 
-            // 更新桌面端统计
             document.getElementById('taskCount').textContent = globalStats.taskCount;
             document.getElementById('phoneCount').textContent = globalStats.totalPhoneCount;
             document.getElementById('totalSentCount').textContent = totalCount;
@@ -7063,7 +8009,6 @@
             document.getElementById('failCount').textContent = globalStats.totalFail;
             document.getElementById('successRate').textContent = `${successRate.toFixed(1)}%`;
 
-            // 同步更新移动端统计
             const taskCountMobile = document.getElementById('taskCountMobile');
             const phoneCountMobile = document.getElementById('phoneCountMobile');
             const totalSentCountMobile = document.getElementById('totalSentCountMobile');
@@ -7077,7 +8022,6 @@
             if (failCountMobile) failCountMobile.textContent = globalStats.totalFail;
             if (successRateMobile) successRateMobile.textContent = `${successRate.toFixed(1)}%`;
 
-            // 同步更新A版中的统计栏
             updateInlineStats();
         }
 
@@ -7101,11 +8045,9 @@
         }
 
         function updateInlineStats() {
-            // 成功/失败/成功率：只统计A版发送任务的结果，与C版无关
             const totalAll = globalStats.totalSuccess + globalStats.totalFail;
             const successRate = totalAll > 0 ? (globalStats.totalSuccess / totalAll * 100) : 0;
 
-            // 计算总数量（A版发送数量 + C版总数）
             const totalCount = globalStats.totalSent + globalStats.inboxTotal;
 
             const taskCountInline = document.getElementById('taskCountInline');
@@ -7123,15 +8065,15 @@
             if (successRateInline) successRateInline.textContent = `${successRate.toFixed(1)}%`;
         }
 
+        //#endregion
+        //#region 统计功能模块（A版和B版统计显示）
         function initGlobalStatsDisplay() {
-            // 更新总号码数（从Set中获取，确保去重）
             globalStats.totalPhoneCount = sentPhoneNumbers.size;
 
             const totalCount = globalStats.totalSent + globalStats.inboxTotal;
             document.getElementById('taskCount').textContent = globalStats.taskCount;
             document.getElementById('phoneCount').textContent = globalStats.totalPhoneCount;
             document.getElementById('totalSentCount').textContent = totalCount;
-            // 成功/失败/成功率：只显示A版发送任务的结果
             document.getElementById('successCount').textContent = globalStats.totalSuccess;
             document.getElementById('failCount').textContent = globalStats.totalFail;
             const totalAll = globalStats.totalSuccess + globalStats.totalFail;
@@ -7141,26 +8083,27 @@
             updateInlineStats();
         }
 
-        // 导航按钮切换功能
+        //#endregion
+        //#region 面板切换模块（主页面、发送、收件箱、账号管理）
         function switchPanel(panelType) {
             const workspaceAB = document.getElementById('workspaceAB');
-            const panelB = document.getElementById('panelB'); // 移动端B面板
+            const panelB = document.getElementById('panelB');
             const panelC = document.getElementById('panelC');
             const panelD = document.getElementById('panelD');
+            const panelE = document.getElementById('panelE');
             const navHomeBtn = document.getElementById('navHomeBtn');
+            const navAccountBtn = document.getElementById('navAccountBtn');
             const navSendBtn = document.getElementById('navSendBtn');
             const navInboxBtn = document.getElementById('navInboxBtn');
             const logPanelBtn = document.getElementById('logPanelBtn');
 
-            // 移除所有按钮的active状态
             if (navHomeBtn) navHomeBtn.classList.remove('active');
+            if (navAccountBtn) navAccountBtn.classList.remove('active');
             if (navSendBtn) navSendBtn.classList.remove('active');
             if (navInboxBtn) navInboxBtn.classList.remove('active');
 
-            // 检测是否为移动端
             const isMobile = window.innerWidth <= 768;
 
-            // 隐藏所有面板
             if (workspaceAB) {
                 workspaceAB.style.display = 'none';
                 workspaceAB.classList.remove('mobile-show', 'single-panel', 'show-log');
@@ -7177,10 +8120,12 @@
                 panelD.classList.remove('mobile-show');
                 panelD.style.display = 'none';
             }
-            // 重置日志面板按钮状态
+            if (panelE) {
+                panelE.classList.remove('mobile-show');
+                panelE.style.display = 'none';
+            }
             if (logPanelBtn) logPanelBtn.classList.remove('active');
 
-            // 根据类型显示对应面板并激活对应按钮
             if (panelType === 'home') {
                 if (isMobile) {
                     if (panelD) {
@@ -7193,14 +8138,12 @@
                 if (navHomeBtn) navHomeBtn.classList.add('active');
             } else if (panelType === 'send') {
                 if (isMobile) {
-                    // 移动端：只显示面板A
                     if (workspaceAB) {
                         workspaceAB.classList.add('mobile-show', 'single-panel');
                         workspaceAB.style.display = 'flex';
                         workspaceAB.classList.remove('show-log');
                     }
                 } else {
-                    // 桌面端：显示A版，可切换显示B版
                     if (workspaceAB) {
                         workspaceAB.style.display = 'flex';
                         workspaceAB.classList.add('single-panel');
@@ -7218,26 +8161,32 @@
                     if (panelC) panelC.style.display = 'flex';
                 }
                 if (navInboxBtn) navInboxBtn.classList.add('active');
+            } else if (panelType === 'account') {
+                if (isMobile) {
+                    if (panelE) {
+                        panelE.classList.add('mobile-show');
+                        panelE.style.display = 'flex';
+                    }
+                } else {
+                    if (panelE) panelE.style.display = 'flex';
+                }
+                if (navAccountBtn) navAccountBtn.classList.add('active');
             }
         }
 
-        // 日志面板切换功能 - A切换到B
+        // 日志面板切换
         function toggleLogPanel() {
             const workspaceAB = document.getElementById('workspaceAB');
-            const panelB = document.getElementById('panelB'); // 移动端B面板
+            const panelB = document.getElementById('panelB');
             const panelC = document.getElementById('panelC');
             const panelD = document.getElementById('panelD');
             const logPanelBtn = document.getElementById('logPanelBtn');
 
-            // 检测是否为移动端
             const isMobile = window.innerWidth <= 768;
 
             if (isMobile) {
-                // 移动端：切换到面板B单独显示
-                // 同步日志内容到移动端B面板
                 syncLogToMobile();
 
-                // 隐藏所有其他面板
                 if (workspaceAB) {
                     workspaceAB.classList.remove('mobile-show');
                     workspaceAB.style.display = 'none';
@@ -7250,22 +8199,18 @@
                     panelD.classList.remove('mobile-show');
                     panelD.style.display = 'none';
                 }
-                // 显示移动端B面板
                 if (panelB) {
                     panelB.classList.add('mobile-show');
                     panelB.style.display = 'flex';
                 }
                 if (logPanelBtn) logPanelBtn.classList.add('active');
             } else {
-                // 桌面端：原有逻辑，AB并排显示
                 if (workspaceAB && logPanelBtn) {
                     if (workspaceAB.classList.contains('show-log')) {
-                        // 隐藏日志面板，只显示A版居中
                         workspaceAB.classList.remove('show-log');
                         workspaceAB.classList.add('single-panel');
                         logPanelBtn.classList.remove('active');
                     } else {
-                        // 显示日志面板，AB并排
                         workspaceAB.classList.remove('single-panel');
                         workspaceAB.classList.add('show-log');
                         logPanelBtn.classList.add('active');
@@ -7274,7 +8219,7 @@
             }
         }
 
-        // 同步日志和统计到移动端B面板
+        // 同步日志到移动端
         function syncLogToMobile() {
             const statusList = document.getElementById('statusList');
             const statusListMobile = document.getElementById('statusListMobile');
@@ -7283,7 +8228,6 @@
                 statusListMobile.scrollTop = statusListMobile.scrollHeight;
             }
 
-            // 同步统计数据
             const statIds = ['taskCount', 'phoneCount', 'totalSentCount', 'successCount', 'failCount', 'successRate'];
             statIds.forEach(id => {
                 const source = document.getElementById(id);
@@ -7294,7 +8238,7 @@
             });
         }
 
-        // 从B面板返回A面板（移动端专用）
+        // 从B面板返回A面板（移动端）
         function backToSendPanel() {
             const workspaceAB = document.getElementById('workspaceAB');
             const panelB = document.getElementById('panelB');
@@ -7303,11 +8247,9 @@
             const logPanelBtn = document.getElementById('logPanelBtn');
             const navSendBtn = document.getElementById('navSendBtn');
 
-            // 检测是否为移动端
             const isMobile = window.innerWidth <= 768;
 
             if (isMobile) {
-                // 隐藏B面板
                 if (panelB) {
                     panelB.classList.remove('mobile-show');
                     panelB.style.display = 'none';
@@ -7320,20 +8262,18 @@
                     panelD.classList.remove('mobile-show');
                     panelD.style.display = 'none';
                 }
-                // 显示A面板
                 if (workspaceAB) {
                     workspaceAB.classList.add('mobile-show', 'single-panel');
                     workspaceAB.classList.remove('show-log');
                     workspaceAB.style.display = 'flex';
                 }
                 if (logPanelBtn) logPanelBtn.classList.remove('active');
-                // 确保导航按钮状态正确
                 document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
                 if (navSendBtn) navSendBtn.classList.add('active');
             }
         }
 
-        // 导航按钮事件
+        // ==================== 事件绑定 ====================
         document.getElementById('navHomeBtn').addEventListener('click', function () {
             switchPanel('home');
         });
@@ -7344,6 +8284,10 @@
 
         document.getElementById('navInboxBtn').addEventListener('click', function () {
             switchPanel('inbox');
+        });
+
+        document.getElementById('navAccountBtn').addEventListener('click', function () {
+            switchPanel('account');
         });
 
         // 日志面板切换功能（A -> B）
@@ -7580,27 +8524,32 @@
             // 按D键显示/隐藏调试信息
             debugInfo.style.display = window.showDebugInfo ? 'block' : 'none';
         }
-
+        //#endregion
+        //#region 辅助功能模块（文件导入、清空、计数更新、缩放等）
         function init() {
-            // 立即显示主容器，防止白屏
             const mainContainer = document.querySelector('.main-container');
             if (mainContainer) {
                 mainContainer.style.display = 'flex';
             }
 
-            // 检查登录状态
+            // 检查登录状态（但不强制跳转，避免主面板消失）
             if (!checkAuth()) {
-                // 如果未登录，显示登录界面，不继续初始化
+                // 如果未登录，不继续初始化，但保持主容器显示
+                console.warn('未登录，跳过初始化');
                 return;
             }
 
             updateCounts();
             initGlobalStatsDisplay();
             updateButtonState();
-            updateConnectionStatus(false); // 初始状态为未连接
+            updateConnectionStatus(false);
             resetInboxOnConnect();
-            connectWebSocket();
-            document.getElementById('statusList').innerHTML = '';
+            loadServersFromAPI();
+            connectToAvailableServers();
+            const statusList = document.getElementById('statusList');
+            if (statusList) {
+                statusList.innerHTML = '';
+            }
 
             // 设置间隔选择器的初始颜色
             updateIntervalColor();
@@ -7645,26 +8594,47 @@
             switchPanel('home');
         }
 
-        // 使用 DOMContentLoaded 确保 DOM 加载完成后再初始化
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            // DOM 已经加载完成，立即执行
-            init();
+        // 注意：init()函数现在由initPage()统一调用，避免重复初始化
+        //#endregion
+        //#region 页面切换模块（登录页面、主应用页面切换）
+        // 退出登录
+        function handleLogout() {
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('admin_id');
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_username');
+            
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            
+            showLoginPage();
         }
 
-
-
-        // ==================== 页面切换逻辑 ====================
         function showMainApp() {
             const loginPage = document.getElementById('loginPage');
             const adminPage = document.getElementById('adminPage');
             const managerPage = document.getElementById('managerPage');
             const contentWrapper = document.querySelector('.content-wrapper');
             const mainContainer = document.querySelector('.main-container');
+            const panelA = document.getElementById('panelA');
+            const panelB = document.getElementById('panelB');
+            const panelC = document.getElementById('panelC');
+            const panelD = document.getElementById('panelD');
+            const panelE = document.getElementById('panelE');
 
-            // 隐藏登录和管理页面
-            if (loginPage) loginPage.style.display = 'none';
+            if (loginPage) {
+                loginPage.style.display = 'none';
+                document.body.classList.remove('login-mode');
+            }
             if (adminPage) {
                 adminPage.classList.remove('show');
                 adminPage.style.display = 'none';
@@ -7673,13 +8643,40 @@
                 managerPage.style.display = 'none';
             }
 
-            // 显示主应用页面
             if (contentWrapper) {
                 contentWrapper.style.display = 'flex';
             }
             if (mainContainer) {
                 mainContainer.style.display = 'flex';
             }
+            
+            if (panelA) {
+                panelA.style.display = 'flex';
+            }
+            if (panelB) {
+                panelB.style.display = 'none';
+                panelB.classList.remove('mobile-show');
+            }
+            if (panelC) {
+                panelC.style.display = 'none';
+            }
+            if (panelD) {
+                panelD.style.display = 'none';
+            }
+            if (panelE) {
+                panelE.style.display = 'none';
+                panelE.classList.remove('mobile-show');
+            }
+            
+            const navHomeBtn = document.getElementById('navHomeBtn');
+            const navAccountBtn = document.getElementById('navAccountBtn');
+            const navSendBtn = document.getElementById('navSendBtn');
+            const navInboxBtn = document.getElementById('navInboxBtn');
+            if (navHomeBtn) navHomeBtn.classList.add('active');
+            if (navAccountBtn) navAccountBtn.classList.remove('active');
+            if (navSendBtn) navSendBtn.classList.remove('active');
+            if (navInboxBtn) navInboxBtn.classList.remove('active');
+            
         }
 
         function showLoginPage() {
@@ -7689,14 +8686,14 @@
             const adminPage = document.getElementById('adminPage');
             const managerPage = document.getElementById('managerPage');
 
-            // 显示登录页面
-            if (loginPage) loginPage.style.display = 'flex';
+            if (loginPage) {
+                loginPage.style.display = 'flex';
+                document.body.classList.add('login-mode');
+            }
 
-            // 隐藏主应用页面
             if (contentWrapper) contentWrapper.style.display = 'none';
             if (mainContainer) mainContainer.style.display = 'none';
 
-            // 隐藏管理页面
             if (adminPage) {
                 adminPage.classList.remove('show');
                 adminPage.style.display = 'none';
@@ -7706,181 +8703,16 @@
             }
         }
 
-        // 修改 checkAuth 函数（如果存在）
-        if (typeof window.checkAuth === 'function') {
-            const originalCheckAuth = window.checkAuth;
-            window.checkAuth = function () {
-                const result = originalCheckAuth();
-                if (result) {
-                    showMainApp();
-                } else {
-                    showLoginPage();
-                }
-                return result;
-            };
-        }
 
-        // 修改 handleLogin 函数（如果存在）
-        if (typeof window.handleLogin === 'function') {
-            const originalHandleLogin = window.handleLogin;
-            window.handleLogin = function () {
-                const usernameEl = document.getElementById('loginUsername');
-                const passwordEl = document.getElementById('loginPassword');
-
-                if (!usernameEl || !passwordEl) {
-                    if (originalHandleLogin) return originalHandleLogin.apply(this, arguments);
-                    return;
-                }
-
-                const username = usernameEl.value.trim();
-                const password = passwordEl.value.trim();
-
-                if (!username || !password) {
-                    if (window.showMessage) {
-                        showMessage('请输入用户名和密码', 'error');
-                    }
-                    return;
-                }
-
-                // 调用API进行登录验证
-                async function doLogin() {
-                    try {
-                        if (window.showMessage) {
-                            showMessage('正在验证...', 'info');
-                        }
-                        
-                        const API_BASE_URL = 'https://autosender.up.railway.app/api';
-                        const response = await fetch(`${API_BASE_URL}/login`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                username: username,
-                                password: password
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (response.ok && data.success) {
-                            // 登录成功，保存token和用户信息
-                            localStorage.setItem('user_id', data.user_id || username);
-                            localStorage.setItem('auth_token', data.token);
-                            localStorage.setItem('username', username);
-                            
-                            if (window.showMessage) {
-                                showMessage('登录成功！正在跳转...', 'success');
-                            }
-                            
-                            // 切换页面
-                            setTimeout(() => {
-                                console.log('开始切换页面...');
-                                
-                                const loginPage = document.getElementById('loginPage');
-                                const contentWrapper = document.querySelector('.content-wrapper');
-                                const mainContainer = document.querySelector('.main-container');
-                                
-                                if (loginPage) loginPage.style.display = 'none';
-                                if (contentWrapper) contentWrapper.style.display = 'flex';
-                                if (mainContainer) mainContainer.style.display = 'flex';
-                                
-                                if (typeof showMainApp === 'function') {
-                                    showMainApp();
-                                }
-                                
-                                if (typeof window.init === 'function') {
-                                    window.init();
-                                }
-                            }, 500);
-                        } else {
-                            // 登录失败
-                            const errorMsg = data.message || '登录失败，请检查用户名和密码';
-                            if (window.showMessage) {
-                                showMessage(errorMsg, 'error');
-                            } else {
-                                alert(errorMsg);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('登录错误:', error);
-                        // API服务器可能未启动，提示用户
-                        const errorMsg = '无法连接到登录服务器，请确保API服务器已启动（python api_server.py）';
-                        if (window.showMessage) {
-                            showMessage(errorMsg, 'error');
-                        } else {
-                            alert(errorMsg);
-                        }
-                    }
-                }
-                
-                // 执行登录
-                doLogin();
-                return;
-
-                setTimeout(() => {
-                    console.log('开始切换页面...');
-
-                    // 直接操作DOM元素，确保切换成功
-                    const loginPage = document.getElementById('loginPage');
-                    const contentWrapper = document.querySelector('.content-wrapper');
-                    const mainContainer = document.querySelector('.main-container');
-
-                    console.log('登录页面元素:', loginPage);
-                    console.log('主应用容器元素:', contentWrapper);
-                    console.log('主容器元素:', mainContainer);
-
-                    // 隐藏登录页面
-                    if (loginPage) {
-                        loginPage.style.display = 'none';
-                        console.log('✓ 已隐藏登录页面');
-                    }
-
-                    // 显示主应用页面
-                    if (contentWrapper) {
-                        contentWrapper.style.display = 'flex';
-                        console.log('✓ 已显示主应用容器');
-                    }
-
-                    if (mainContainer) {
-                        mainContainer.style.display = 'flex';
-                        console.log('✓ 已显示主容器');
-                    }
-
-                    // 调用 showMainApp 函数（如果存在）
-                    if (typeof showMainApp === 'function') {
-                        console.log('调用 showMainApp 函数...');
-                        showMainApp();
-                    } else {
-                        console.warn('showMainApp 函数不存在');
-                    }
-
-                    // 初始化主应用
-                    if (typeof window.init === 'function') {
-                        console.log('调用 init 函数...');
-                        window.init();
-                    } else {
-                        console.warn('init 函数不存在，尝试直接初始化...');
-                        // 尝试直接初始化关键功能
-                        if (typeof updateCounts === 'function') {
-                            updateCounts();
-                            console.log('✓ 已调用 updateCounts');
-                        }
-                        if (typeof connectWebSocket === 'function') {
-                            connectWebSocket();
-                            console.log('✓ 已调用 connectWebSocket');
-                        }
-                    }
-                }, 500);
-            };
-        }
-
-        // 修改 front.html 中的跳转逻辑
-        // 注意：不能直接重定义 window.location.href，所以我们在 checkAuth 中处理跳转
-        // 如果 front.html 中有 window.location.href = 'login.html' 的代码，会被 checkAuth 拦截
-
-        // 初始化：检查是否已登录
+        //#endregion
+        //#region 页面初始化模块（应用启动入口）
         function initPage() {
+            // 检查登录页面初始状态，设置 body 类名
+            const loginPage = document.getElementById('loginPage');
+            if (loginPage && loginPage.style.display !== 'none') {
+                document.body.classList.add('login-mode');
+            }
+            
             if (typeof window.checkAuth === 'function') {
                 if (checkAuth()) {
                     showMainApp();
@@ -7892,7 +8724,6 @@
                     showLoginPage();
                 }
             } else {
-                // 如果没有 checkAuth，检查 localStorage
                 const userId = localStorage.getItem('user_id');
                 const authToken = localStorage.getItem('auth_token');
                 if (userId && authToken) {
@@ -7912,6 +8743,7 @@
         } else {
             initPage();
         }
+        //#endregion
     </script>
 </body>
 
