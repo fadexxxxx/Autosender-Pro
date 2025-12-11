@@ -4980,8 +4980,7 @@
     <script>
         //#region 登录认证模块（用户登录、管理员登录、注册）
         // ==================== 管理员密码配置 ====================
-        // 注意：管理员密码现在存储在数据库中，不再使用硬编码
-        // 默认管理员账户：admin，初始密码：159357
+
 
         // ==================== 用户/管理员切换 ====================
         // 切换到用户登录表单
@@ -5098,6 +5097,13 @@
                         body: JSON.stringify({ username: username, password: password })
                     });
                     
+                    // 检查响应状态
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API响应错误:', response.status, errorText);
+                        throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                    }
+                    
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
@@ -5137,7 +5143,22 @@
                     }
                 } catch (error) {
                     console.error('登录错误:', error);
-                    const errorMsg = '无法连接到登录服务器。请先启动API服务器：python api_server.py';
+                    console.error('错误详情:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // 更详细的错误信息
+                    let errorMsg = '无法连接到登录服务器';
+                    if (error.message.includes('Failed to fetch')) {
+                        errorMsg = `网络连接失败。请检查：\n1. API地址是否正确: ${API_BASE_URL}\n2. 网络连接是否正常\n3. Railway服务是否运行`;
+                    } else if (error.message.includes('CORS')) {
+                        errorMsg = 'CORS跨域错误，请检查API服务器配置';
+                    } else {
+                        errorMsg = `连接错误: ${error.message}`;
+                    }
+                    
                     if (typeof showMessage === 'function') {
                         showMessage(errorMsg, 'error');
                     } else {
@@ -5217,8 +5238,22 @@
                         }
                     } catch (error) {
                         console.error('管理员登录错误:', error);
-                        // API服务器可能未启动，提示用户
-                        const errorMsg = '无法连接到管理员登录服务器，请确保API服务器已启动';
+                        console.error('错误详情:', {
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack
+                        });
+                        
+                        // 更详细的错误信息
+                        let errorMsg = '无法连接到管理员登录服务器';
+                        if (error.message.includes('Failed to fetch')) {
+                            errorMsg = `网络连接失败。请检查：\n1. API地址是否正确: ${API_BASE_URL}\n2. 网络连接是否正常\n3. Railway服务是否运行`;
+                        } else if (error.message.includes('CORS')) {
+                            errorMsg = 'CORS跨域错误，请检查API服务器配置';
+                        } else {
+                            errorMsg = `连接错误: ${error.message}`;
+                        }
+                        
                         if (typeof showMessage === 'function') {
                             showMessage(errorMsg, 'error');
                         } else {
@@ -5331,6 +5366,13 @@
                         })
                     });
 
+                    // 检查响应状态
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API响应错误:', response.status, errorText);
+                        throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                    }
+
                     const data = await response.json();
 
                     if (response.ok && data.success) {
@@ -5366,8 +5408,22 @@
                     }
                 } catch (error) {
                     console.error('注册错误:', error);
-                    // API服务器可能未启动，提示用户
-                    const errorMsg = '无法连接到注册服务器。请先启动API服务器：python api_server.py';
+                    console.error('错误详情:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // 更详细的错误信息
+                    let errorMsg = '注册失败，无法连接到服务器';
+                    if (error.message.includes('Failed to fetch')) {
+                        errorMsg = `网络连接失败。请检查：\n1. API地址是否正确: ${API_BASE_URL}\n2. 网络连接是否正常\n3. Railway服务是否运行`;
+                    } else if (error.message.includes('CORS')) {
+                        errorMsg = 'CORS跨域错误，请检查API服务器配置';
+                    } else {
+                        errorMsg = `连接错误: ${error.message}`;
+                    }
+                    
                     if (typeof showMessage === 'function') {
                         showMessage(errorMsg, 'error');
                     } else {
@@ -5421,6 +5477,13 @@
                     body: JSON.stringify({ password: password })
                 });
 
+                // 检查响应状态
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API响应错误:', response.status, errorText);
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
@@ -5452,8 +5515,24 @@
                 }
             } catch (error) {
                 console.error('验证服务器管理密码失败:', error);
+                console.error('错误详情:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                
+                // 更详细的错误信息
+                let errorMsg = '网络错误，请检查API服务器连接';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg = `网络连接失败。API地址: ${API_BASE_URL}`;
+                } else if (error.message.includes('CORS')) {
+                    errorMsg = 'CORS跨域错误，请检查API服务器配置';
+                } else {
+                    errorMsg = `连接错误: ${error.message}`;
+                }
+                
                 msg.className = 'modal-message error';
-                msg.textContent = '网络错误，请检查API服务器连接';
+                msg.textContent = errorMsg;
                 setTimeout(() => {
                     msg.className = 'modal-message';
                     msg.textContent = '';
@@ -5727,7 +5806,7 @@
         let websocketConnections = new Map();
         let availableServersForUser = [];
         
-        // API基础URL（全局）
+        // API基础URL（全局）- 注意：末尾不要有斜杠，使用时会自动添加
         const API_BASE_URL = 'https://autosender.up.railway.app/api';
         
         // 从API加载服务器列表
@@ -5780,7 +5859,7 @@
             }
         }
 
-        // WebSocket URL格式转换（支持多种输入格式）
+        // WebSocket URL格式转换（只处理端口号，其他URL直接使用）
         function normalizeWebSocketUrl(url) {
             if (!url || typeof url !== 'string') return null;
 
@@ -5791,49 +5870,7 @@
                 return `ws://localhost:${port}/ws`;
             }
 
-            if (/^(localhost|127\.0\.0\.1):\d+$/.test(url)) {
-                return `ws://${url}/ws`;
-            }
-
-            if (!url.includes('://') && !url.startsWith('ws://') && !url.startsWith('wss://')) {
-                if (url.includes('ngrok')) {
-                    return `wss://${url}/ws`;
-                }
-                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                return `${protocol}${url}/ws`;
-            }
-
-            if (url.startsWith('ws://') || url.startsWith('wss://')) {
-                try {
-                    const urlObj = new URL(url);
-                    if (!urlObj.pathname || urlObj.pathname === '/') {
-                        url = url.endsWith('/') ? url + 'ws' : url + '/ws';
-                    }
-                } catch (e) {
-                    if (!url.includes('/ws')) {
-                        url = url.endsWith('/') ? url + 'ws' : url + '/ws';
-                    }
-                }
-                return url;
-            }
-
-            if (url.startsWith('http://')) {
-                url = url.replace('http://', 'ws://');
-            } else if (url.startsWith('https://')) {
-                url = url.replace('https://', 'wss://');
-            }
-
-            try {
-                const urlObj = new URL(url);
-                if (!urlObj.pathname || urlObj.pathname === '/') {
-                    url = url.endsWith('/') ? url + 'ws' : url + '/ws';
-                }
-            } catch (e) {
-                if (!url.includes('/ws')) {
-                    url = url.endsWith('/') ? url + 'ws' : url + '/ws';
-                }
-            }
-
+            // 其他任何URL（ngrok、github、完整URL等），直接使用，不做任何修改
             return url;
         }
 
@@ -5858,28 +5895,299 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/servers`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({
-                        server_id: server_id,
-                        server_name: name,
-                        server_url: url
+                        name: name,
+                        url: url,
+                        server_id: server_id
                     })
                 });
 
-                const data = await response.json();
-                if (data.success) {
-                    const server = { name, url, server_id, status: 'connecting' };
-                    serverData.available.push(server);
-                    document.getElementById('newServerName').value = '';
-                    document.getElementById('newServerUrl').value = '';
-                    updateServerDisplay();
-                    attemptConnect(server);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        showMessage(`服务器 ${name} 添加成功`, 'success');
+                        await loadServersFromAPI();
+                        document.getElementById('newServerName').value = '';
+                        document.getElementById('newServerUrl').value = '';
+                    } else {
+                        await customAlert('添加服务器失败: ' + (data.message || '未知错误'));
+                    }
                 } else {
-                    await customAlert(data.message || '注册服务器失败');
+                    const error = await response.json();
+                    await customAlert('添加服务器失败: ' + (error.message || '网络错误'));
                 }
             } catch (error) {
-                await customAlert('注册服务器失败: ' + error.message);
+                await customAlert('添加服务器失败: ' + error.message);
             }
+        }
+
+        // 尝试连接服务器
+        function attemptConnect(server) {
+            const wsUrl = normalizeWebSocketUrl(server.url);
+            
+            // 显示连接中状态
+            const index = serverData.available.findIndex(s => s.name === server.name);
+            if (index !== -1) {
+                server.status = 'connecting';
+                updateServerDisplay();
+            }
+            
+            // 尝试建立WebSocket连接进行验证
+            try {
+                const testWs = new WebSocket(wsUrl);
+                
+                const connectTimeout = setTimeout(() => {
+                    testWs.close();
+                    // 连接超时，标记为失败
+                    if (index !== -1) {
+                        server.status = 'available';
+                        showMessage(`连接 ${server.name} 超时`, 'error');
+                        updateServerDisplay();
+                    }
+                }, 5000);
+                
+                testWs.onopen = () => {
+                    clearTimeout(connectTimeout);
+                    testWs.close();
+                    if (index !== -1) {
+                        serverData.available.splice(index, 1);
+                        server.status = 'connected';
+                        updateServerDisplay();
+                        showMessage(`成功连接到 ${server.name}`, 'success');
+                    }
+                };
+                
+                testWs.onerror = () => {
+                    clearTimeout(connectTimeout);
+                    if (index !== -1) {
+                        server.status = 'available';
+                        showMessage(`连接 ${server.name} 失败`, 'error');
+                        updateServerDisplay();
+                    }
+                };
+            } catch (error) {
+                clearTimeout(connectTimeout);
+                if (index !== -1) {
+                    server.status = 'available';
+                    showMessage(`连接 ${server.name} 失败: ${error.message}`, 'error');
+                    updateServerDisplay();
+                }
+            }
+        }
+
+        // 删除服务器
+        async function deleteServer(serverId) {
+            if (!await customConfirm('确定要删除这个服务器吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/servers/${serverId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        showMessage('服务器删除成功', 'success');
+                        await loadServersFromAPI();
+                    } else {
+                        await customAlert('删除服务器失败: ' + (data.message || '未知错误'));
+                    }
+                } else {
+                    const error = await response.json();
+                    await customAlert('删除服务器失败: ' + (error.message || '网络错误'));
+                }
+            } catch (error) {
+                await customAlert('删除服务器失败: ' + error.message);
+            }
+        }
+
+        // 更新服务器显示
+        function updateServerDisplay() {
+            const container = document.getElementById('serverList');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            // 显示已连接的服务器
+            serverData.connected.forEach(server => {
+                const div = document.createElement('div');
+                div.className = 'server-item connected';
+                div.innerHTML = `
+                    <div class="server-info">
+                        <span class="server-name">${escapeHtml(server.name)}</span>
+                        <span class="server-url">${escapeHtml(server.url)}</span>
+                    </div>
+                    <button class="btn-delete" onclick="deleteServer('${server.server_id}')">删除</button>
+                `;
+                container.appendChild(div);
+            });
+
+            // 显示可用的服务器
+            serverData.available.forEach(server => {
+                const div = document.createElement('div');
+                div.className = `server-item ${server.status || 'available'}`;
+                div.innerHTML = `
+                    <div class="server-info">
+                        <span class="server-name">${escapeHtml(server.name)}</span>
+                        <span class="server-url">${escapeHtml(server.url)}</span>
+                    </div>
+                    <button class="btn-connect" onclick="attemptConnect(${JSON.stringify(server).replace(/"/g, '&quot;')})">连接</button>
+                    <button class="btn-delete" onclick="deleteServer('${server.server_id}')">删除</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 加载服务器列表
+        async function loadServersFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/servers`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        serverData.connected = data.servers.filter(s => s.status === 'connected');
+                        serverData.available = data.servers.filter(s => s.status !== 'connected');
+                        updateServerDisplay();
+                    }
+                }
+            } catch (error) {
+                console.error('加载服务器列表失败:', error);
+            }
+        }
+
+        // 页面加载时加载服务器列表
+        document.addEventListener('DOMContentLoaded', () => {
+            loadServersFromAPI();
+        });
+
+        // WebSocket 连接管理（已在上面声明）
+
+        // 连接到所有已分配的服务器
+        async function connectToAssignedServers() {
+            const user_id = localStorage.getItem('user_id');
+            if (!user_id) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/servers/assigned/${user_id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.servers) {
+                        for (const server of data.servers) {
+                            if (!websocketConnections.has(server.server_id)) {
+                                connectToServer(server);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('获取分配的服务器失败:', error);
+            }
+        }
+
+        // 连接到单个服务器
+        function connectToServer(server) {
+            const wsUrl = normalizeWebSocketUrl(server.url);
+            
+            if (!wsUrl) {
+                console.error('无效的 WebSocket URL:', server.url);
+                return;
+            }
+
+            try {
+                const ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    console.log(`✅ 已连接到服务器: ${server.name}`);
+                    websocketConnections.set(server.server_id, ws);
+                    
+                    // 发送身份验证信息
+                    ws.send(JSON.stringify({
+                        type: 'auth',
+                        user_id: localStorage.getItem('user_id'),
+                        token: localStorage.getItem('token')
+                    }));
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleWebSocketMessage(data, server);
+                    } catch (e) {
+                        console.error('解析 WebSocket 消息失败:', e);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    console.error(`❌ WebSocket 错误 (${server.name}):`, error);
+                };
+                
+                ws.onclose = () => {
+                    console.log(`🔌 与服务器断开连接: ${server.name}`);
+                    websocketConnections.delete(server.server_id);
+                    
+                    // 尝试重连
+                    setTimeout(() => {
+                        if (!websocketConnections.has(server.server_id)) {
+                            connectToServer(server);
+                        }
+                    }, 5000);
+                };
+            } catch (error) {
+                console.error(`连接服务器失败 (${server.name}):`, error);
+            }
+        }
+
+        // 处理 WebSocket 消息
+        function handleWebSocketMessage(data, server) {
+            switch (data.type) {
+                case 'status':
+                    showMessage(data.message, data.level || 'info');
+                    break;
+                case 'sending_progress':
+                    updateSendingProgress(data);
+                    break;
+                case 'sending_complete':
+                    handleSendingComplete(data);
+                    break;
+                case 'inbox_update':
+                    updateInbox(data);
+                    break;
+                default:
+                    console.log('未知的 WebSocket 消息类型:', data.type);
+            }
+        }
+
+        // 发送消息到服务器
+        function sendToServer(serverId, message) {
+            const ws = websocketConnections.get(serverId);
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+            } else {
+                console.error(`服务器 ${serverId} 未连接`);
+            }
+        }
+
+        // 断开所有 WebSocket 连接
+        function disconnectAllServers() {
+            websocketConnections.forEach((ws, serverId) => {
+                ws.close();
+            });
+            websocketConnections.clear();
+        }
+
+        // 页面卸载时断开连接
+        window.addEventListener('beforeunload', () => {
+            disconnectAllServers();
+        });
+
+        // 登录成功后连接服务器
+        if (localStorage.getItem('user_id')) {
+            connectToAssignedServers();
         }
 
         // 尝试连接服务器
