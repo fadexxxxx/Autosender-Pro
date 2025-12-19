@@ -7769,10 +7769,12 @@
         
         async function testAPIConnection() {
             try {
+                const authToken = localStorage.getItem('auth_token');
                 const response = await fetch(`${API_BASE_URL}/servers`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
                     },
                     // 添加超时控制
                     signal: AbortSignal.timeout(10000) // 10秒超时
@@ -7797,10 +7799,12 @@
         // 从API加载服务器列表
         async function loadServersFromAPI() {
             try {
+                const authToken = localStorage.getItem('auth_token');
                 const response = await fetch(`${API_BASE_URL}/servers`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
                     },
                     signal: AbortSignal.timeout(10000) // 10秒超时
                 });
@@ -7809,19 +7813,54 @@
                 }
                 
                 const data = await response.json();
-                if (data.success && data.servers) {
-                    console.log('加载服务器列表成功，服务器数量:', data.servers.length);
+                let servers = Array.isArray(data?.servers) ? data.servers : [];
+                const ok = !!(data?.success || data?.ok || Array.isArray(data?.servers));
+                if (ok && servers) {
+                    // 兼容：有些部署只维护“用户后端(backend)”列表，而不是全局 /servers
+                    // 当 /servers 为空时，尝试用 /user/{id}/backends 作为回退数据源
+                    if (servers.length === 0) {
+                        try {
+                            const userId = localStorage.getItem('user_id');
+                            const token = localStorage.getItem('auth_token');
+                            if (userId && token) {
+                                const resp = await fetch(`${API_BASE_URL}/user/${userId}/backends`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+                                if (resp.ok) {
+                                    const backendData = await resp.json();
+                                    const backends = backendData?.backend_servers;
+                                    if (Array.isArray(backends) && backends.length > 0) {
+                                        servers = backends.map(b => ({
+                                            server_id: b.server_id || b.id || b.backend_id || b.name,
+                                            server_name: b.server_name || b.name || b.id || b.server_id,
+                                            server_url: b.server_url || b.url || '',
+                                            status: b.status || 'online',
+                                            assigned_user_id: b.assigned_user_id || userId
+                                        }));
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // 静默失败：保持原逻辑（服务器列表为空）
+                        }
+                    }
+                    console.log('加载服务器列表成功，服务器数量:', servers.length);
                     
                     // 保存服务器分配信息（assigned_user_id）
                     const serverAssignments = {};
-                    data.servers.forEach(s => {
+                    servers.forEach(s => {
                         if (s.assigned_user_id) {
                             serverAssignments[s.server_name] = s.assigned_user_id;
                         }
                     });
                     
-                    serverData.available = data.servers
-                        .filter(s => s.status === 'available' && !s.assigned_user_id)
+                    const normalizeStatus = (s) => String(s || '').toLowerCase();
+                    const isConnected = (s) => ['connected', 'online', 'ready', 'running'].includes(normalizeStatus(s?.status));
+                    const isAvailable = (s) => ['available', 'idle', 'free'].includes(normalizeStatus(s?.status));
+                    const isDisconnected = (s) => ['disconnected', 'offline', 'down'].includes(normalizeStatus(s?.status));
+
+                    serverData.available = servers
+                        .filter(s => isAvailable(s) && !s.assigned_user_id)
                         .map(s => ({ 
                             name: s.server_name, 
                             url: s.server_url, 
@@ -7829,8 +7868,8 @@
                             status: 'available',
                             assigned_user_id: s.assigned_user_id || null
                         }));
-                    serverData.connected = data.servers
-                        .filter(s => s.status === 'connected')
+                    serverData.connected = servers
+                        .filter(s => isConnected(s))
                         .map(s => ({ 
                             name: s.server_name, 
                             url: s.server_url, 
@@ -7838,8 +7877,8 @@
                             status: 'connected',
                             assigned_user_id: s.assigned_user_id || null
                         }));
-                    serverData.disconnected = data.servers
-                        .filter(s => s.status === 'disconnected')
+                    serverData.disconnected = servers
+                        .filter(s => isDisconnected(s) || (!isConnected(s) && !isAvailable(s)))
                         .map(s => ({ 
                             name: s.server_name, 
                             url: s.server_url, 
@@ -8047,7 +8086,12 @@
                 return;
             }
             try {
-                const resp = await fetch(`${API_BASE_URL}/user/${currentUserId}/servers`);
+                const authToken = localStorage.getItem('auth_token');
+                const resp = await fetch(`${API_BASE_URL}/user/${currentUserId}/servers`, {
+                    headers: {
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    }
+                });
                 const data = await resp.json();
                 if (!data || !data.ok) {
                     console.error("loadAvailableServersForUser: unexpected response", data);
@@ -8100,8 +8144,12 @@
             }
 
             try {
+                const authToken = localStorage.getItem('auth_token');
                 const response = await fetch(`${API_BASE_URL}/servers/${serverId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    }
                 });
 
                 if (response.ok) {
@@ -8788,8 +8836,13 @@
             }
             
             try {
+                const authToken = localStorage.getItem('auth_token');
                 // 获取用户积分
-                const creditsResp = await fetch(`${API_BASE_URL}/user/${userId}/credits`);
+                const creditsResp = await fetch(`${API_BASE_URL}/user/${userId}/credits`, {
+                    headers: {
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    }
+                });
                 if (!creditsResp.ok) {
                     if (creditsResp.status === 404) {
                         alert('用户不存在');
@@ -8805,7 +8858,11 @@
                 }
                 
                 // 获取用户详细信息（包括usage记录）
-                const userResp = await fetch(`${API_BASE_URL}/user/${userId}/statistics`);
+                const userResp = await fetch(`${API_BASE_URL}/user/${userId}/statistics`, {
+                    headers: {
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    }
+                });
                 let userData = null;
                 if (userResp.ok) {
                     const data = await userResp.json();
@@ -8919,10 +8976,12 @@
             }
             
             try {
+                const authToken = localStorage.getItem('auth_token');
                 const response = await fetch(`${API_BASE_URL}/user/${currentRechargeUserId}/recharge`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
                     },
                     body: JSON.stringify({
                         amount: amount
@@ -9695,9 +9754,13 @@
                 const server = allServers.find(s => s.name === serverName);
                 if (server && server.server_id) {
                     try {
+                        const authToken = localStorage.getItem('auth_token');
                         const response = await fetch(`${API_BASE_URL}/servers/${server.server_id}/assign`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                            },
                             body: JSON.stringify({
                                 user_id: currentGroupCreation.userId
                             })
@@ -9756,9 +9819,13 @@
                     const server = allServers.find(s => s.name === serverName);
                     if (server && server.server_id) {
                         try {
+                            const authToken = localStorage.getItem('auth_token');
                             await fetch(`${API_BASE_URL}/servers/${server.server_id}/unassign`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' }
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                                }
                             });
                         } catch (error) {
                             console.error(`取消分配服务器 ${serverName} 失败:`, error);
@@ -10140,9 +10207,13 @@
                 const server = allServers.find(s => s.name === serverName);
                 if (server && server.server_id) {
                     try {
+                        const authToken = localStorage.getItem('auth_token');
                         const response = await fetch(`${API_BASE_URL}/servers/${server.server_id}/assign`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                            },
                             body: JSON.stringify({
                                 user_id: userId
                             })
@@ -10164,9 +10235,13 @@
                     const server = allServers.find(s => s.name === serverName);
                     if (server && server.server_id) {
                         try {
+                            const authToken = localStorage.getItem('auth_token');
                             await fetch(`${API_BASE_URL}/servers/${server.server_id}/unassign`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' }
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                                }
                             });
                         } catch (error) {
                             console.error(`取消分配服务器 ${serverName} 失败:`, error);
@@ -10711,7 +10786,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     const backends = data.backend_servers || [];
-供前端使用
+                    // 供前端使用
                     localStorage.setItem('user_backends', JSON.stringify(backends));
                     return backends;
                 }
@@ -11299,7 +11374,8 @@
             // 检查是否有可用的服务器
             const hasConnectedServers = serverData.connected && serverData.connected.length > 0;
             const hasAvailableServers = serverData.available && serverData.available.length > 0;
-            if (!hasConnectedServers && !hasAvailableServers) {
+            const hasUserServers = Array.isArray(availableServersForUser) && availableServersForUser.length > 0;
+            if (!hasConnectedServers && !hasAvailableServers && !hasUserServers) {
                 alert("没有可用的服务器，无法发送消息。请等待服务器上线或联系管理员。");
                 return;
             }
@@ -11361,8 +11437,11 @@
                 // 2) assign shards
                 const assignResp = await fetch(`${API_BASE_URL}/task/assign`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ task_id: taskId })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    },
+                    body: JSON.stringify({ task_id: taskId, user_id: currentUserId })
                 });
                 const assignData = await assignResp.json();
                 if (!assignData || !assignData.ok) {
