@@ -6284,73 +6284,84 @@
 
                 <!-- 用户登录表单 -->
                 <div id="userLoginForm">
-                    <div class="form-group">
-                        <input type="text" class="form-input" id="loginUsername" placeholder="用户名">
-                    </div>
-                    <div class="form-group">
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="loginPassword" placeholder="密码">
-                            <button type="button" class="show-password-btn"
-                                onclick="togglePassword('loginPassword', this)">👁️</button>
+                    <form novalidate onsubmit="handleLogin(); return false;">
+                        <div class="form-group">
+                            <input type="text" class="form-input" id="loginUsername" placeholder="用户名" autocomplete="username">
                         </div>
-                    </div>
-                    <div class="forgot-password">
-                        <a href="#" class="forgot-password-link"
-                            onclick="handleForgotPassword(); return false;">忘记密码？</a>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn-secondary btn-register" onclick="showRegister()">注册</button>
-                        <button class="btn-primary" onclick="handleLogin()">登录</button>
-                    </div>
+                        <div class="form-group">
+                            <div class="password-wrapper">
+                                <input type="password" class="form-input" id="loginPassword" placeholder="密码"
+                                       autocomplete="current-password">
+                                <button type="button" class="show-password-btn"
+                                        onclick="togglePassword('loginPassword', this)">👁️</button>
+                            </div>
+                        </div>
+                        <div class="forgot-password">
+                            <a href="#" class="forgot-password-link"
+                               onclick="handleForgotPassword(); return false;">忘记密码？</a>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn-secondary btn-register" onclick="showRegister()">注册</button>
+                            <button type="submit" class="btn-primary">登录</button>
+                        </div>
+                    </form>
                 </div>
-
+                
                 <!-- 管理员登录表单 -->
                 <div id="adminLoginForm" style="display: none;">
-                    <div class="form-group">
-                        <input type="text" class="form-input" id="adminLoginUsername" placeholder="管理员用户名">
-                    </div>
-                    <div class="form-group">
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="adminLoginPassword" placeholder="管理员密码">
-                            <button type="button" class="show-password-btn"
-                                onclick="togglePassword('adminLoginPassword', this)">👁️</button>
+                    <form novalidate onsubmit="handleAdminLogin(); return false;">
+                        <div class="form-group">
+                            <input type="text" class="form-input" id="adminLoginUsername" placeholder="管理员用户名" autocomplete="username">
                         </div>
-                    </div>
-                    <!-- 保持与用户登录表单相同的间隔，但不显示忘记密码 -->
-                    <div class="forgot-password" style="visibility: hidden;">
-                        <a href="#" class="forgot-password-link">占位</a>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn-secondary" onclick="switchToUser()">返回</button>
-                        <button class="btn-primary" onclick="handleAdminLogin()">登录</button>
-                    </div>
+                        <div class="form-group">
+                            <div class="password-wrapper">
+                                <input type="password" class="form-input" id="adminLoginPassword" placeholder="管理员密码"
+                                       autocomplete="current-password">
+                                <button type="button" class="show-password-btn"
+                                        onclick="togglePassword('adminLoginPassword', this)">👁️</button>
+                            </div>
+                        </div>
+                        <div class="forgot-password" style="visibility: hidden;">
+                            <a href="#" class="forgot-password-link">占位</a>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn-secondary" onclick="switchToUser()">返回</button>
+                            <button type="submit" class="btn-primary">登录</button>
+                        </div>
+                    </form>
                 </div>
-
+                
                 <!-- 注册表单 -->
                 <div id="registerForm" style="display: none;">
-                    <div class="form-group">
-                        <input type="text" class="form-input" id="registerUsername" placeholder="请设置用户名">
-                    </div>
-                    <div class="form-group">
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="registerPassword" placeholder="请设置密码,至少4位">
-                            <button type="button" class="show-password-btn"
-                                onclick="togglePassword('registerPassword', this)">👁️</button>
+                    <form novalidate onsubmit="handleRegister(); return false;">
+                        <div class="form-group">
+                            <input type="text" class="form-input" id="registerUsername" placeholder="请设置用户名" autocomplete="username">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="registerConfirmPassword" placeholder="请确认密码,至少4位">
-                            <button type="button" class="show-password-btn"
-                                onclick="togglePassword('registerConfirmPassword', this)">👁️</button>
+                        <div class="form-group">
+                            <div class="password-wrapper">
+                                <input type="password" class="form-input" id="registerPassword" placeholder="请设置密码,至少4位"
+                                       autocomplete="new-password">
+                                <button type="button" class="show-password-btn"
+                                        onclick="togglePassword('registerPassword', this)">👁️</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn-secondary" onclick="showLogin()">返回</button>
-                        <button class="btn-primary" onclick="handleRegister()">确定</button>
-                    </div>
+                        <div class="form-group">
+                            <div class="password-wrapper">
+                                <input type="password" class="form-input" id="registerConfirmPassword" placeholder="请确认密码,至少4位"
+                                       autocomplete="new-password">
+                                <button type="button" class="show-password-btn"
+                                        onclick="togglePassword('registerConfirmPassword', this)">👁️</button>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn-secondary" onclick="showLogin()">返回</button>
+                            <button type="submit" class="btn-primary">确定</button>
+                        </div>
+                    </form>
                 </div>
-
+                
+    
+                
                 <div class="message-box" id="authMessage"></div>
             </div>
         </div>
@@ -7754,7 +7765,7 @@
             ? 'http://127.0.0.1:5000/api'  // 本地API地址（端口5000）
             : 'https://autosender.up.railway.app/api';  // 远程API地址
         
-        console.log('API Base URL:', API_BASE_URL, '(Local Dev:', isLocalDev + ')');
+        //console.log('API Base URL:', API_BASE_URL, '(Local Dev:', isLocalDev + ')');
         
         async function testAPIConnection() {
             try {
