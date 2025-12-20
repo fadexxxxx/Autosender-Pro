@@ -7765,11 +7765,7 @@
             console.error('加载管理员账号失败:', error);
         }
         
-        // 移除测试管理员账号
-        // const testAdminAccount = { id: 'debug', password: '1', selectedServers: [] };
-        // if (!adminAccounts.some(a => a.id === 'debug')) {
-        //     adminAccounts.push(testAdminAccount);
-        // }
+
         
         let availableServersForUser = [];
         
@@ -7815,12 +7811,11 @@
             try {
                 // 使用 /api/servers 获取所有服务器列表
                 // 注意：这里可能需要优化权限，目前假设所有用户/管理员都能看到所有服务器
-                // 添加时间戳防止缓存
+                // 添加时间戳防止缓存（不使用Cache-Control头，避免CORS问题）
                 const response = await fetch(`${API_BASE_URL}/servers?t=${Date.now()}`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
+                        'Content-Type': 'application/json'
                     },
                     signal: AbortSignal.timeout(10000) // 10秒超时
                 });
@@ -7836,7 +7831,7 @@
                     // 清空现有数据
                     serverData.available = [];
                     serverData.connected = [];
-                    serverData.disconnected = [];
+                    serverData.disconnected = []; // 不再展示 disconnected（避免“假服务器/僵尸服务器”污染 UI）
                     
                     // 处理每个服务器
                     data.servers.forEach(s => {
@@ -7844,21 +7839,56 @@
                             name: s.server_name || s.server_id, 
                             url: s.server_url || '', 
                             server_id: s.server_id, 
-                            status: s.status,
+                            status: (s.status || '').toLowerCase(),
                             assigned_user_id: s.assigned_user_id || null,
                             last_seen: s.last_seen
                         };
                         
                         // 根据状态分类
-                        if (s.status === 'connected') {
+                        if (serverItem.status === 'connected') {
                             serverData.connected.push(serverItem);
-                        } else if (s.status === 'available') {
+                        } else if (serverItem.status === 'available') {
                             serverData.available.push(serverItem);
                         } else {
-                            // 默认为断开
-                            serverData.disconnected.push(serverItem);
+                            // 按你的要求：服务器不可用就不显示（避免测试假数据、离线僵尸干扰）
                         }
                     });
+
+                    // 清理本地缓存里残留的“假服务器名称”（只保留 API 当前存在的）
+                    const realNames = new Set([...serverData.connected, ...serverData.available].map(s => String(s.name || '').trim()).filter(Boolean));
+                    let cleaned = false;
+                    try {
+                        adminAccounts.forEach(acc => {
+                            if (Array.isArray(acc.selectedServers)) {
+                                const before = acc.selectedServers.length;
+                                acc.selectedServers = acc.selectedServers.filter(n => realNames.has(String(n).trim()));
+                                if (acc.selectedServers.length !== before) cleaned = true;
+                            }
+                            if (Array.isArray(acc.userGroups)) {
+                                acc.userGroups.forEach(g => {
+                                    if (Array.isArray(g.servers)) {
+                                        const b = g.servers.length;
+                                        g.servers = g.servers.filter(n => realNames.has(String(n).trim()));
+                                        if (g.servers.length !== b) cleaned = true;
+                                    }
+                                });
+                            }
+                        });
+                        if (Array.isArray(managerUserGroups)) {
+                            managerUserGroups.forEach(g => {
+                                if (Array.isArray(g.servers)) {
+                                    const b = g.servers.length;
+                                    g.servers = g.servers.filter(n => realNames.has(String(n).trim()));
+                                    if (g.servers.length !== b) cleaned = true;
+                                }
+                            });
+                        }
+                        if (cleaned) {
+                            localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+                        }
+                    } catch (e) {
+                        console.warn('清理旧服务器缓存失败:', e);
+                    }
                     
                     // 更新界面显示
                     updateServerDisplay();
@@ -9042,8 +9072,9 @@
 
             if (!account.selectedServers) account.selectedServers = [];
 
-            // 确保使用已连接的服务器列表
-            const allServers = serverData.connected.map(s => s.name || s.server_name || s.server_id);
+            // 使用“已连接 + 可用”的服务器列表（与你的定义一致：能用就展示）
+            const allServerObjs = [...serverData.connected, ...serverData.available];
+            const allServers = allServerObjs.map(s => s.name || s.server_name || s.server_id);
 
             const panel = document.getElementById('customModalPanel');
             panel.classList.add('admin-manage-modal');
@@ -9079,18 +9110,17 @@
                     <div class="admin-manage-servers-label">可管理的后端服务器:</div>
                     <div class="admin-manage-servers-grid" id="adminManageServersGrid">
                         ${allServers.length > 0 ? allServers.map(server => {
-                // 检查是否已选中（直接字符串匹配，去除空格）
-                const serverStr = String(server).trim();
-                const isSelected = account.selectedServers.some(selected => 
-                    String(selected).trim() === serverStr
-                );
-                // 转义服务器名称，防止XSS
-                const escapedServer = serverStr.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
-                return `<button class="admin-manage-server-btn ${isSelected ? 'selected' : ''}" 
-                                    onclick="toggleServerSelection('${adminId}', '${escapedServer}', this)">
-                                    ${escapedServer}
-                                </button>`;
-            }).join('') : '<div style="padding: 10px; color: #666; text-align: center;">暂无已连接的服务器</div>'}
+                            const serverStr = String(server).trim();
+                            const isSelected = account.selectedServers.some(selected =>
+                                String(selected).trim() === serverStr
+                            );
+                            // 转义服务器名称，防止XSS
+                            const escapedServer = serverStr.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
+                            return `<button class="server-button connected ${isSelected ? 'selected' : ''}" 
+                                            onclick="toggleServerSelection('${adminId}', '${escapedServer}', this)">
+                                        <div class="server-button-name">${escapedServer}</div>
+                                    </button>`;
+                        }).join('') : '<div style="padding: 10px; color: #666; text-align: center;">暂无可用服务器</div>'}
                     </div>
                 </div>
             `;
@@ -9130,7 +9160,7 @@
 
             account.selectedServers = [];
             const grid = document.getElementById('adminManageServersGrid');
-            const buttons = grid.querySelectorAll('.admin-manage-server-btn');
+            const buttons = grid.querySelectorAll('.server-button');
             buttons.forEach(btn => btn.classList.remove('selected'));
         }
 
@@ -9138,14 +9168,14 @@
             const account = adminAccounts.find(a => a.id === adminId);
             if (!account) return;
 
-            // 只显示已连接的服务器，使用服务器名称
-            const allServers = serverData.connected.map(s => {
+            // 只显示可用的服务器（connected + available）
+            const allServers = [...serverData.connected, ...serverData.available].map(s => {
                 return s.name || s.server_name || s.server_id || String(s);
             });
 
             account.selectedServers = [...allServers];
             const grid = document.getElementById('adminManageServersGrid');
-            const buttons = grid.querySelectorAll('.admin-manage-server-btn');
+            const buttons = grid.querySelectorAll('.server-button');
             buttons.forEach(btn => btn.classList.add('selected'));
         }
 
@@ -9155,8 +9185,8 @@
             
             const grid = document.getElementById('adminManageServersGrid');
             if (grid) {
-                const selectedButtons = grid.querySelectorAll('.admin-manage-server-btn.selected');
-                account.selectedServers = Array.from(selectedButtons).map(btn => btn.textContent.trim());
+                const selectedButtons = grid.querySelectorAll('.server-button.selected');
+                account.selectedServers = Array.from(selectedButtons).map(btn => (btn.textContent || '').trim());
             }
 
             try {
@@ -9900,6 +9930,7 @@
                 // 获取分配给当前管理员的服务器
                 const account = adminAccounts.find(a => a.id === currentManagerId);
                 const managerAssignedServers = account && account.selectedServers ? account.selectedServers : [];
+                const liveServers = [...serverData.connected, ...serverData.available];
                 
                 serverSectionHtml = `
                     <div class="user-detail-server-section">
@@ -9911,9 +9942,19 @@
                         <div id="userServerSelectionGrid" class="user-detail-server-grid">
                             ${managerAssignedServers.map(serverName => {
                                 const isSelected = assignedServers.includes(serverName);
-                                return `<button class="server-button-new ${isSelected ? 'selected' : ''}" 
-                                            onclick="toggleUserServerSelection('${userId}', '${serverName}', this)">
-                                        ${serverName}
+                                const s = liveServers.find(x => String(x.name).trim() === String(serverName).trim());
+                                const url = s ? (s.url || '') : '';
+                                const portMatch = url.match(/:(\d+)/);
+                                const port = portMatch ? portMatch[1] : (s && (s.port || (String(s.name).match(/\d+/)?.[0])) ) || '?';
+                                const safeUserId = String(userId).replace(/'/g, "\\'");
+                                const safeServerName = String(serverName).replace(/'/g, "\\'");
+                                return `<button class="server-button connected ${isSelected ? 'selected' : ''}" 
+                                            onclick="toggleUserServerSelection('${safeUserId}', '${safeServerName}', this)">
+                                        <div class="server-button-name">${port}</div>
+                                        <div class="server-tooltip">
+                                            <div style="font-weight: bold; margin-bottom: 4px;">${serverName}</div>
+                                            <div style="font-size: 11px; opacity: 0.9;">${url || ''}</div>
+                                        </div>
                                     </button>`;
                             }).join('')}
                         </div>
@@ -10062,7 +10103,7 @@
             }
             const grid = document.getElementById('userServerSelectionGrid');
             if (grid) {
-                const buttons = grid.querySelectorAll('.admin-manage-server-btn');
+                const buttons = grid.querySelectorAll('.server-button');
                 buttons.forEach(btn => btn.classList.remove('selected'));
             }
         }
@@ -10076,7 +10117,6 @@
             const allServers = [
                 ...serverData.available,
                 ...serverData.connected,
-                ...serverData.disconnected
             ];
             
             for (const serverName of selectedServers) {
@@ -10314,7 +10354,7 @@
                 
                 assignedToUsers.forEach(server => {
                     const btn = document.createElement('button');
-                    btn.className = 'admin-manage-server-btn';
+                    btn.className = 'server-button connected';
                     const serverName = server.name || server.server_name || server.server_id || String(server);
                     
                     // 如果正在创建分组且该服务器被选中，添加选中效果
@@ -10330,8 +10370,13 @@
                     
                     const portMatch = (server.url || '').match(/:(\d+)/);
                     const port = portMatch ? portMatch[1] : (server.port || serverName.match(/\d+/)?.[0] || '?');
-                    btn.textContent = port;
-                    btn.title = serverName;
+                    btn.innerHTML = `
+                        <div class="server-button-name">${port}</div>
+                        <div class="server-tooltip">
+                            <div style="font-weight: bold; margin-bottom: 4px;">${serverName}</div>
+                            <div style="font-size: 11px; opacity: 0.9;">${server.url || ''}</div>
+                        </div>
+                    `;
                     assignedGrid.appendChild(btn);
                 });
                 
@@ -10361,7 +10406,7 @@
                 
                 availableForAssignment.forEach(server => {
                     const btn = document.createElement('button');
-                    btn.className = 'admin-manage-server-btn';
+                    btn.className = 'server-button';
                     const serverName = server.name || server.server_name || server.server_id || String(server);
                     
                     // 如果正在创建分组，添加选中效果
@@ -10380,8 +10425,13 @@
                     
                     const portMatch = (server.url || '').match(/:(\d+)/);
                     const port = portMatch ? portMatch[1] : (server.port || serverName.match(/\d+/)?.[0] || '?');
-                    btn.textContent = port;
-                    btn.title = serverName;
+                    btn.innerHTML = `
+                        <div class="server-button-name">${port}</div>
+                        <div class="server-tooltip">
+                            <div style="font-weight: bold; margin-bottom: 4px;">${serverName}</div>
+                            <div style="font-size: 11px; opacity: 0.9;">${server.url || ''}</div>
+                        </div>
+                    `;
                     availableGrid.appendChild(btn);
                 });
                 
@@ -11239,155 +11289,94 @@
         }
 
         //#endregion
-        //#region 发送任务处理
-        // --- 替换 startSending() ---
-        async function startSending() {
-            if (!currentUserId) {
-                alert("请先登录");
-                return;
-            }
-            
-            // 检查是否有正在进行的任务（防止重复点击）
-            if (isSending) {
-                alert("已有任务正在执行，请等待当前任务完成");
-                return;
-            }
-            
-            // 检查是否有可用的服务器
-            // 修正：只要有connected或available的服务器即可
-            // 如果是在本地开发环境，或者没有正确加载服务器列表，尝试跳过检查
-            // 只有当明确知道没有服务器时才拦截
-            /*
-            const hasConnectedServers = serverData.connected && serverData.connected.length > 0;
-            const hasAvailableServers = serverData.available && serverData.available.length > 0;
-            if (!hasConnectedServers && !hasAvailableServers) {
-                // 再尝试加载一次，也许是刚上线
-                try {
-                    await loadServersFromAPI();
-                    const retryConnected = serverData.connected && serverData.connected.length > 0;
-                    const retryAvailable = serverData.available && serverData.available.length > 0;
-                    if (!retryConnected && !retryAvailable) {
-                        alert("没有可用的服务器，无法发送消息。请等待服务器上线或联系管理员。");
-                        return;
-                    }
-                } catch (e) {
-                    console.warn("发送前检查服务器失败:", e);
-                    // 继续尝试发送，也许服务器已经在后台连接了
-                }
-            }
-            */
-            
-            // 立即锁定发送按钮
-            isSending = true;
-            updateButtonState();
-            
-            const numbersText = document.getElementById('numbersText').value || "";
-            const message = document.getElementById('messageText').value || "";
-            const interval = parseFloat(document.getElementById('intervalInput').value) || 1.0;
-            if (!numbersText.trim() || !message.trim()) {
-                isSending = false;
-                updateButtonState();
-                alert("号码或内容为空");
-                return;
-            }
-            // parse numbers into array (支持逗号/换行)
-            let phones = [];
-            if (numbersText) {
-                // 先统一替换换行符为逗号，然后按逗号分割
-                const rawPhones = numbersText.replace(/\r?\n/g, ',').split(',');
-                rawPhones.forEach(p => {
-                    const n = p.trim();
-                    if (n) phones.push(n);
-                });
-            }
-            
-            if (phones.length === 0) {
-                isSending = false;
-                updateButtonState();
-                alert("未识别到有效号码");
-                return;
-            }
+        //#region 发送短信API交互功能模块（创建任务、分配任务、轮询状态、显示结果）
+        // === 极简任务模型 ===
+        // create(必须带用户token) -> assign(必要；否则shard没有server_id后端拉不到) -> 等待status=done（优先SSE，失败再轮询）
 
-            try {
-                // 1) create task
-                const authToken = localStorage.getItem('auth_token');
-                const createResp = await fetch(`${API_BASE_URL}/task/create`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUserId,
-                        message: message,
-                        numbers: phones,
-                        count: 1,
-                        token: authToken
-                    })
-                });
-                const createData = await createResp.json();
-                if (!createData || !createData.ok) {
-                    isSending = false;
-                    updateButtonState();
-                    alert("创建任务失败: " + (createData && createData.msg ? createData.msg : "未知"));
-                    return;
-                }
-                const taskId = createData.task_id;
-
-                // 2) assign shards
-                const assignResp = await fetch(`${API_BASE_URL}/task/assign`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ task_id: taskId })
-                });
-                const assignData = await assignResp.json();
-                if (!assignData || !assignData.ok) {
-                    // 分配失败，立即停止，不启动轮询
-                    isSending = false;
-                    updateButtonState();
-                    const errorMsg = assignData && assignData.msg ? assignData.msg : "暂无可用服务器";
-                    alert("分配任务失败: " + errorMsg);
-                    
-                    // 显示错误消息
-                    if (typeof addStatusMessage === 'function') {
-                        addStatusMessage(`任务 ${taskId} 分配失败: ${errorMsg}`);
-                    } else {
-                        showNotification(`任务 ${taskId} 分配失败: ${errorMsg}`, 'error');
-                    }
-                    return;
-                }
-
-                // 3) show success UI
-                if (typeof addStatusMessage === 'function') {
-                    addStatusMessage(`任务 ${taskId} 已创建并分配，正在等待后端执行`);
-                } else {
-                    showNotification(`任务 ${taskId} 已创建并分配，正在等待后端执行`, 'success');
-                }
-                // 按钮已经锁定，不需要再次设置
-                
-                // 启动任务状态轮询
-                startTaskStatusPolling(taskId, phones.length);
-            } catch (err) {
-                isSending = false;
-                updateButtonState();
-                console.error("startSending error:", err);
-                alert("发送失败: " + (err.message || "未知错误"));
-            }
+        function _sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
-        
-        // 任务状态轮询（智能间隔）
-        let taskPollingIntervals = new Map(); // {taskId: intervalId}
-        
-        // 停止所有任务轮询
+
+        function _authToken() {
+            return localStorage.getItem('auth_token') || '';
+        }
+
+        // 统一的“停止等待任务”的实现（兼容旧的 stopAllTaskPolling 名字）
+        const _activeTaskWatcher = {
+            taskId: null,
+            eventSource: null,
+            pollTimer: null
+        };
+
+        function _stopTaskWatchersOnly() {
+            try {
+                if (_activeTaskWatcher.eventSource) {
+                    _activeTaskWatcher.eventSource.close();
+                    _activeTaskWatcher.eventSource = null;
+                }
+                if (_activeTaskWatcher.pollTimer) {
+                    clearInterval(_activeTaskWatcher.pollTimer);
+                    _activeTaskWatcher.pollTimer = null;
+                }
+            } catch (e) {
+                console.warn('stopAllTaskPolling failed:', e);
+            }
+            _activeTaskWatcher.taskId = null;
+        }
+
         function stopAllTaskPolling() {
-            taskPollingIntervals.forEach((intervalId, taskId) => {
-                clearInterval(intervalId);
-            });
-            taskPollingIntervals.clear();
+            _stopTaskWatchersOnly();
             isSending = false;
             updateButtonState();
         }
-        
+
+        async function _createTask({ message, numbers, taskType = 'normal' }) {
+            const token = _authToken();
+            if (!token) {
+                throw new Error('缺少登录token，请重新登录');
+            }
+            const resp = await fetch(`${API_BASE_URL}/task/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    user_id: currentUserId,
+                    message,
+                    numbers,
+                    count: 1,
+                    task_type: taskType,
+                    token
+                })
+            });
+            let data = null;
+            try { data = await resp.json(); } catch { /* ignore */ }
+            if (!resp.ok || !data || !data.ok) {
+                const msg = (data && (data.message || data.msg)) || `${resp.status} ${resp.statusText}`;
+                // 积分不足时，API会返回 required/current，尽量带出来
+                if (data && data.message === 'insufficient_credits') {
+                    const required = data.required != null ? Number(data.required).toFixed(2) : '?';
+                    const current = data.current != null ? Number(data.current).toFixed(2) : '?';
+                    throw new Error(`积分不足：需要 ${required}，当前 ${current}`);
+                }
+                throw new Error(`创建任务失败：${msg}`);
+            }
+            return data.task_id;
+        }
+
+        async function _fetchTaskStatus(taskId) {
+            const resp = await fetch(`${API_BASE_URL}/task/${taskId}/status`);
+            let data = null;
+            try { data = await resp.json(); } catch { /* ignore */ }
+            if (!resp.ok || !data || !data.ok) {
+                const msg = (data && (data.message || data.msg)) || `${resp.status} ${resp.statusText}`;
+                throw new Error(`任务状态查询失败：${msg}`);
+            }
+            return data;
+        }
+
+        // 你原本的思路：按任务规模动态计算第一次查看结果的间隔；之后固定轮询
         function calculatePollingInterval(totalTasks, backendCount = 10) {
             const tasksPerCycle = 100;
             const timePerCycle = 10;
@@ -11395,167 +11384,176 @@
             const y = backendCount;
             const z = x / y;
             let a = z;
-            
+
+            // 最小保护：至少1秒，避免0或过小
+            const first = Math.max(1, Math.round(a));
             if (a > 30) {
-                return { firstInterval: a * 1000, regularInterval: 10 * 1000 };
+                return { firstInterval: first * 1000, regularInterval: 10 * 1000 };
             } else {
-                return { firstInterval: a * 1000, regularInterval: a * 1000 };
+                return { firstInterval: first * 1000, regularInterval: first * 1000 };
             }
         }
-        
-        async function startTaskStatusPolling(taskId, totalTasks) {
-            // 停止之前的轮询（如果有）
-            if (taskPollingIntervals.has(taskId)) {
-                clearInterval(taskPollingIntervals.get(taskId));
-            }
-            
-            const backendCount = 10;
-            const intervals = calculatePollingInterval(totalTasks, backendCount);
-            let isFirstPoll = true;
-            let pollCount = 0;
-            const maxPollCount = 60; // 最大轮询次数：60次（安全网，正常情况下不会用到）
-            const startTime = Date.now();
-            const maxDuration = 2 * 60 * 1000; // 最大持续时间：2分钟（安全网）
-            let lastProgress = { done: 0, success: 0, fail: 0 }; // 记录上次进度
-            let noProgressCount = 0; // 无进展计数
-            
-            // 停止轮询并解锁按钮的辅助函数
-            const stopPolling = (reason, isError = false) => {
-                const intervalId = taskPollingIntervals.get(taskId);
-                if (intervalId) {
-                    clearInterval(intervalId);
-                    taskPollingIntervals.delete(taskId);
-                }
-                
-                isSending = false;
-                updateButtonState();
-                
-                const message = isError 
-                    ? `任务 ${taskId} 已停止: ${reason}`
-                    : `任务 ${taskId} ${reason}`;
-                
-                if (typeof addStatusMessage === 'function') {
-                    addStatusMessage(message);
-                } else {
-                    showNotification(message, isError ? 'error' : 'info');
-                }
-            };
-            
-            const poll = async () => {
-                // 安全检查：防止无限轮询（正常情况下不会触发）
-                const elapsed = Date.now() - startTime;
-                if (elapsed > maxDuration) {
-                    stopPolling('超时停止（超过2分钟）', true);
-                    return;
-                }
-                
-                pollCount++;
-                if (pollCount > maxPollCount) {
-                    stopPolling('达到最大轮询次数，已停止', true);
-                    return;
-                }
-                
+
+        function _watchTaskViaSSE(taskId, onUpdate) {
+            return new Promise((resolve, reject) => {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/task/${taskId}/status`);
-                    
-                    if (!response.ok) {
-                        // API 请求失败，停止轮询
-                        stopPolling(`API请求失败: ${response.status} ${response.statusText}`, true);
-                        return;
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.ok) {
-                        const status = data.status;
-                        const result = data.result || {};
-                        const shards = data.shards || {};
-                        const success = result.success || 0;
-                        const fail = result.fail || 0;
-                        const done = shards.done || 0;
-                        const total = shards.total || totalTasks;
-                        
-                        // ========== 人类逻辑：一次任务，发送完就结束，无论成功失败 ==========
-                        
-                        // 1. 如果状态是 done，任务完成，立即停止
-                        if (status === 'done') {
-                            stopPolling(`任务完成！成功: ${success}, 失败: ${fail}`, false);
-                            globalStats.totalSuccess += success;
-                            globalStats.totalFail += fail;
-                            updateInlineStats();
-                            return;
-                        }
-                        
-                        // 2. 如果状态是 failed/error/cancelled，任务失败，立即停止
-                        if (status === 'failed' || status === 'error' || status === 'cancelled') {
-                            stopPolling(`任务失败: ${data.message || status}`, true);
-                            return;
-                        }
-                        
-                        // 3. 核心逻辑：如果成功+失败的数量 >= 总数，说明任务全部完成，立即停止
-                        // 无论成功还是失败，只要全部发送完就结束
-                        if (totalTasks > 0 && (success + fail) >= totalTasks) {
-                            stopPolling(`任务完成！成功: ${success}, 失败: ${fail}`, false);
-                            globalStats.totalSuccess += success;
-                            globalStats.totalFail += fail;
-                            updateInlineStats();
-                            return;
-                        }
-                        
-                        // 4. 检测无进展：如果30秒内进度没有变化，停止（防止卡死）
-                        const currentProgress = { done: done, success: success, fail: fail };
-                        if (currentProgress.done === lastProgress.done && 
-                            currentProgress.success === lastProgress.success && 
-                            currentProgress.fail === lastProgress.fail) {
-                            noProgressCount++;
-                            // 如果连续10次（约30秒）无进展，停止
-                            if (noProgressCount >= 10 && pollCount > 5) {
-                                stopPolling('任务无进展，已停止', true);
-                                return;
+                    // 注意：SSE不支持自定义Header，所以后端SSE接口目前不做鉴权（你的api_server.py也是这样）
+                    // 为了避免“无限等待”，这里给一个明确上限（30分钟）；超时后前端停止等待即可。
+                    const es = new EventSource(`${API_BASE_URL}/task/${taskId}/events?interval=1&max_seconds=1800`);
+                    _activeTaskWatcher.eventSource = es;
+                    _activeTaskWatcher.taskId = taskId;
+
+                    es.onmessage = (evt) => {
+                        try {
+                            const payload = JSON.parse(evt.data || '{}');
+                            if (payload && typeof onUpdate === 'function') onUpdate(payload);
+                            if (payload && payload.status === 'done') {
+                                es.close();
+                                _activeTaskWatcher.eventSource = null;
+                                resolve(payload);
                             }
-                        } else {
-                            // 有进展，重置计数
-                            noProgressCount = 0;
-                            lastProgress = currentProgress;
+                        } catch (e) {
+                            // 解析失败：忽略，继续等待下一条
+                            console.warn('SSE payload parse failed:', e);
                         }
-                        
-                        // 任务进行中，显示进度
-                        if (status === 'pending' || status === 'running') {
-                            const progress = total > 0 ? (done / total * 100).toFixed(1) : 0;
-                            if (typeof addStatusMessage === 'function') {
-                                addStatusMessage(`任务 ${taskId} 进行中... 完成: ${done}/${total} (${progress}%) 成功: ${success} 失败: ${fail}`);
-                            }
-                        } else {
-                            // 未知状态
-                            console.warn(`未知任务状态: ${status}`);
-                        }
-                    } else {
-                        // API 返回错误
-                        stopPolling(`任务状态查询失败: ${data.message || '未知错误'}`, true);
-                        return;
-                    }
-                } catch (err) {
-                    // 网络错误或其他异常
-                    console.error("轮询任务状态失败:", err);
-                    // 连续错误超过5次才停止
-                    if (pollCount > 5) {
-                        stopPolling(`网络错误: ${err.message}`, true);
-                        return;
-                    }
+                    };
+
+                    es.addEventListener('end', () => {
+                        try { es.close(); } catch { /* ignore */ }
+                        _activeTaskWatcher.eventSource = null;
+                        // 结束事件不代表done，做一次status兜底
+                        _fetchTaskStatus(taskId).then(resolve).catch(reject);
+                    });
+
+                    es.addEventListener('error', (e) => {
+                        try { es.close(); } catch { /* ignore */ }
+                        _activeTaskWatcher.eventSource = null;
+                        reject(new Error('SSE连接失败'));
+                    });
+                } catch (e) {
+                    reject(e);
                 }
-                
-                // 第一次轮询后，改用regularInterval
-                if (isFirstPoll) {
-                    isFirstPoll = false;
-                    clearInterval(taskPollingIntervals.get(taskId));
-                    const intervalId = setInterval(poll, intervals.regularInterval);
-                    taskPollingIntervals.set(taskId, intervalId);
+            });
+        }
+
+        async function _watchTaskViaPolling(taskId, onUpdate) {
+            // 轮询兜底：遵循“第一次等待更久、之后固定轮询”的策略（只用于拉结果，不用于重试发送）
+            const deadline = Date.now() + 30 * 60 * 1000; // 30分钟上限，避免无限等待
+            const intervals = calculatePollingInterval(_activeTaskWatcher.totalTasks || 0, 10);
+            const firstWaitMs = intervals.firstInterval;
+            const regularMs = intervals.regularInterval;
+
+            // 第一次先等一会再查（任务大时避免过早查不到而频繁请求）
+            await _sleep(firstWaitMs);
+            while (true) {
+                // 支持取消：如果外部停止了watcher，直接退出
+                if (_activeTaskWatcher.taskId !== taskId) {
+                    throw new Error('任务等待已取消');
                 }
+                if (Date.now() > deadline) {
+                    throw new Error('等待任务超时（30分钟）');
+                }
+                const data = await _fetchTaskStatus(taskId);
+                const payload = {
+                    task_id: taskId,
+                    status: data.status,
+                    shards: data.shards || {},
+                    result: data.result || {}
+                };
+                if (typeof onUpdate === 'function') onUpdate(payload);
+                if (data.status === 'done') return payload;
+                await _sleep(regularMs);
+            }
+        }
+
+        async function _waitTaskDone(taskId, totalTasks = 0) {
+            // 先停掉任何正在等待的任务（避免多个任务监听互相影响）
+            _stopTaskWatchersOnly();
+            _activeTaskWatcher.taskId = taskId;
+            _activeTaskWatcher.totalTasks = totalTasks;
+
+            let last = null;
+            const onUpdate = (payload) => {
+                last = payload;
+                // 不刷屏：只在console记录
+                try {
+                    const sc = payload.shards || {};
+                    const rp = payload.result || {};
+                    if (payload.status === 'pending' || payload.status === 'running') {
+                        console.log(`任务 ${taskId} 进行中... shard ${sc.done || 0}/${sc.total || 0} 成功 ${rp.success || 0} 失败 ${rp.fail || 0}`);
+                    }
+                } catch { /* ignore */ }
             };
-            
-            poll();
-            const intervalId = setInterval(poll, intervals.firstInterval);
-            taskPollingIntervals.set(taskId, intervalId);
+
+            try {
+                return await _watchTaskViaSSE(taskId, onUpdate);
+            } catch (e) {
+                console.warn('SSE不可用，回退到轮询:', e);
+                return await _watchTaskViaPolling(taskId, onUpdate);
+            }
+        }
+
+        // --- 替换 startSending()：create -> assign(自动重试) -> 等待done ---
+        async function startSending() {
+            if (!currentUserId) {
+                alert("请先登录");
+                return;
+            }
+            if (isSending) {
+                alert("已有任务正在执行，请等待当前任务完成");
+                return;
+            }
+
+            const numbersText = document.getElementById('numbersText').value || "";
+            const message = document.getElementById('messageText').value || "";
+            if (!numbersText.trim() || !message.trim()) {
+                alert("号码或内容为空");
+                return;
+            }
+
+            // parse numbers into array (支持逗号/换行)
+            let phones = [];
+            const rawPhones = numbersText.replace(/\r?\n/g, ',').split(',');
+            rawPhones.forEach(p => {
+                const n = (p || '').trim();
+                if (n) phones.push(n);
+            });
+            if (phones.length === 0) {
+                alert("未识别到有效号码");
+                return;
+            }
+
+            isSending = true;
+            updateButtonState();
+
+            try {
+                // 核心：一次任务一次请求。是否有worker由API决定：没有就直接返回 no_server
+                const taskId = await _createTask({ message, numbers: phones, taskType: 'normal' });
+
+                // 等待任务完成（优先SSE，不行就按自适应轮询拉结果）
+                const finalPayload = await _waitTaskDone(taskId, phones.length);
+                const rp = finalPayload.result || {};
+                const success = Number(rp.success || 0);
+                const fail = Number(rp.fail || 0);
+
+                // 统计 & UI
+                globalStats.totalSuccess += success;
+                globalStats.totalFail += fail;
+                updateInlineStats();
+
+                const msg = `任务完成！Task=${taskId} 成功:${success} 失败:${fail}`;
+                if (typeof addStatusMessage === 'function') {
+                    addStatusMessage(msg);
+                } else {
+                    showNotification(msg, 'success');
+                }
+            } catch (err) {
+                console.error("startSending error:", err);
+                alert("发送失败: " + (err && err.message ? err.message : "未知错误"));
+            } finally {
+                // 不管成功失败，都解锁按钮 & 清理监听
+                stopAllTaskPolling();
+            }
         }
 
         function updateButtonState() {
@@ -11567,8 +11565,7 @@
                 sendBtn.textContent = '发送';
             }
         }
-
-        //#endregion
+        //#endregion 发送短信API交互功能模块（创建任务、分配任务、轮询状态、显示结果）
         //#region 收件箱模块（C版面板 - 消息接收和回复）
         // 更新通知计数
         function updateNotificationCount() {
@@ -11930,33 +11927,8 @@
             if (!currentUserId) return;
             
             try {
-                // 创建回复任务
-                const authToken = localStorage.getItem('auth_token');
-                const response = await fetch(`${API_BASE_URL}/task/create`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUserId,
-                        message: message,
-                        numbers: [chatId],
-                        count: 1,
-                        task_type: 'reply', // 标记为回复任务
-                        token: authToken
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.ok) {
-                    // 分配任务
-                    await fetch(`${API_BASE_URL}/task/assign`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ task_id: data.task_id })
-                    });
-                }
+                // 回复：一次任务一次请求（是否有worker由API决定）
+                await _createTask({ message, numbers: [chatId], taskType: 'reply' });
             } catch (err) {
                 console.error("发送回复失败:", err);
             }
