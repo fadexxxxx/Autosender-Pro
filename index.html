@@ -8226,7 +8226,7 @@
             const backends = await loadUserBackends();
             const candidates = (backends || []).filter(b => {
                 const st = (b.status || '').toLowerCase();
-                return (st === 'connected' || st === 'available') && (b.server_url || b.url);
+                return (st === 'connected' || st === 'available') && (b.server_url || b.url || b.port);
             });
             if (candidates.length === 0) {
                 showMessage('没有可用的后端服务器（WS）', 'error');
@@ -10693,10 +10693,21 @@
 
         function connectToBackendWS(server) {
             if (!server) return;
-            const rawUrl = server.server_url || server.serverUrl || server.url || server.server_url || server.server_url;
-            const wsUrl = normalizeWebSocketUrl(rawUrl);
+            const rawUrl = server.server_url || server.serverUrl || server.url;
+            const port = server.port != null ? Number(server.port) : null;
+            let wsUrl = normalizeWebSocketUrl(rawUrl);
+
+            // 如果 server_url 为空，但有 port：用“当前页面域名 + port”拼 WS（file:// 则用 localhost）
+            if (!wsUrl && port) {
+                const isFile = window.location && window.location.protocol === 'file:';
+                const host = isFile ? 'localhost' : window.location.hostname;
+                const isHttps = !isFile && window.location.protocol === 'https:';
+                const proto = isHttps ? 'wss' : 'ws';
+                wsUrl = `${proto}://${host}:${port}/ws`;
+            }
+
             if (!wsUrl) {
-                showMessage('服务器WS地址无效，无法连接', 'error');
+                showMessage('服务器没有WS地址且没有端口，无法连接', 'error');
                 return;
             }
 
