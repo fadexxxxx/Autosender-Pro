@@ -7467,6 +7467,7 @@
                 showAutoToast(text, type);
             }
         }
+
         async function handleLogin() {
             const usernameEl = document.getElementById('loginUsername');
             const passwordEl = document.getElementById('loginPassword');
@@ -7582,78 +7583,53 @@
                 return;
             }
 
-            const account = adminAccounts.find(a => a.id === username && a.password === password);
-            if (account) {
-                showMessage('管理员登录成功！正在跳转...', 'success');
-                setTimeout(() => {
-                    loginAsManager(username);
-                }, 1000);
-            } else {
-                async function doAdminLogin() {
-                    try {
-                        if (typeof showMessage === 'function') {
-                            showMessage('正在验证管理员身份...', 'info');
-                        }
-
-                        const response = await fetch(`${API_BASE_URL}/admin/login`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                admin_id: username,
-                                password: password
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok && (data.ok || data.success)) {
-                            localStorage.setItem('admin_id', data.admin_id || username);
-                            localStorage.setItem('admin_token', data.token || 'admin_token');
-                            localStorage.setItem('admin_username', username);
-
-                            showMessage('管理员登录成功！正在跳转...', 'success');
-                            setTimeout(() => {
-                                if (data.has_manager_access) {
-                                    loginAsManager(username);
-                                } else {
-                                    if (typeof showMessage === 'function') {
-                                        showMessage('您没有管理员面板访问权限', 'error');
-                                    }
-                                }
-                            }, 1000);
-                        } else {
-                            const errorMsg = data.message || '密码错误';
-                            if (typeof showMessage === 'function') {
-                                showMessage(errorMsg, 'error');
-                            } else {
-                                await customAlert(errorMsg);
-                            }
-                        }
-                    } catch (error) {
-                        let errorMsg = '密码错误';
-                        try {
-                            if (error.response) {
-                                const errorData = await error.response.json();
-                                errorMsg = errorData.message || '密码错误';
-                            } else if (error.message && error.message.includes('fetch')) {
-                                errorMsg = '网络连接失败，请稍后重试';
-                            }
-                        } catch (e) {
-                            errorMsg = '密码错误';
-                        }
-
-                        if (typeof showMessage === 'function') {
-                            showMessage(errorMsg, 'error');
-                        } else {
-                            await customAlert(errorMsg);
-                        }
+            // 始终优先走 API 管理员登录，拿到真实 admin_token（否则 /admin/account 会 403）
+            // 注意：严禁把 password/token 打到日志里
+            async function doAdminLogin() {
+                try {
+                    if (typeof showMessage === 'function') {
+                        showMessage('正在验证管理员身份...', 'info');
                     }
-                }
 
-                doAdminLogin();
+                    const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ admin_id: username, password: password })
+                    });
+
+                    const data = await response.json().catch(() => ({}));
+
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:handleAdminLogin',message:'admin_login_response',data:{status:response.status,ok:!!response.ok,has_token:!!data.token,has_ok:!!data.ok,has_success:!!data.success,msg:(data.message||'').slice(0,120)},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix1',hypothesisId:'H'})}).catch(()=>{});
+                    // #endregion
+
+                    if (response.ok && (data.ok || data.success) && data.token) {
+                        localStorage.setItem('admin_id', data.admin_id || username);
+                        localStorage.setItem('admin_token', data.token);
+                        localStorage.setItem('admin_username', username);
+
+                        showMessage('管理员登录成功！正在跳转...', 'success');
+                        setTimeout(() => {
+                            // 不再依赖 data.has_manager_access（API 不一定返回该字段）
+                            loginAsManager(username);
+                        }, 500);
+                        return;
+                    }
+
+                    const errorMsg = data.message || '管理员登录失败，请检查用户名和密码';
+                    if (typeof showMessage === 'function') showMessage(errorMsg, 'error');
+                    else await customAlert(errorMsg);
+                } catch (error) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:handleAdminLogin',message:'admin_login_exception',data:{err:(error&&error.message||String(error)).slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix1',hypothesisId:'H'})}).catch(()=>{});
+                    // #endregion
+                    const errorMsg = (error && error.message && error.message.includes('fetch')) ? '网络连接失败，请稍后重试' : '管理员登录失败';
+                    if (typeof showMessage === 'function') showMessage(errorMsg, 'error');
+                    else await customAlert(errorMsg);
+                }
             }
+
+            await doAdminLogin();
         }
 
         async function handleRegister() {
@@ -7842,20 +7818,8 @@
                 }, 3000);
                 return;
             }
-            if (password === '1') {
-                closeAdminModal();
-                const loginPage = document.getElementById('loginPage');
-                const adminPage = document.getElementById('adminPage');
-                if (loginPage) {
-                    loginPage.style.display = 'none';
-                    document.body.classList.remove('login-mode');
-                }
-                if (adminPage) {
-                    adminPage.style.display = 'block';
-                    adminPage.classList.add('show');
-                }
-                return;
-            }
+            // 旧的“password===1 直接绕过”会导致页面不拉数据（空白），现改为统一走 API 校验
+            // if (password === '1') { ... return; }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/server-manager/verify`, {
@@ -7867,6 +7831,9 @@
                 });
 
                 const data = await response.json();
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:verifyAdminPassword',message:'server_manager_verify',data:{status:response.status,ok:!!response.ok,success:!!data.success,msg:(data.message||'').slice(0,120)},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix2',hypothesisId:'K'})}).catch(()=>{});
+                // #endregion
 
                 if (!response.ok || !data.success) {
                     const errorMsg = data.message || '密码错误';
@@ -7909,12 +7876,15 @@
                             }
                         };
 
-                        scheduleServerUpdate(() => {
-                            updateServerDisplay();
+                        // 关键：先拉取数据，再渲染（否则页面为空）
+                        scheduleServerUpdate(async () => {
+                            try { await loadServersFromAPI(); } catch { /* ignore */ }
+                            try { updateServerDisplay(); } catch { /* ignore */ }
                         });
 
-                        scheduleUpdate(() => {
-                            updateAdminAccountDisplay();
+                        scheduleUpdate(async () => {
+                            try { await loadAdminAccountsFromAPI(); } catch { /* ignore */ }
+                            try { updateAdminAccountDisplay(); } catch { /* ignore */ }
                         });
                     }
                 } else {
@@ -8218,12 +8188,61 @@
             console.error('加载管理员账号失败:', error);
         }
 
-        const isLocalDev = window.location.hostname === 'localhost' ||
-                          window.location.hostname === '127.0.0.1' ||
-                          window.location.hostname === '';
-        const API_BASE_URL = isLocalDev
-            ? 'http://127.0.0.1:5000/api'  // 本地API地址（端口5000）
-            : 'https://autosender.up.railway.app/api';  // 远程API地址
+        // 统一去重（避免出现“点一次出来多个”）
+        function _dedupeAdminAccounts(list) {
+            const map = new Map();
+            (Array.isArray(list) ? list : []).forEach(a => {
+                if (!a || !a.id) return;
+                const key = String(a.id).trim();
+                if (!key) return;
+                const prev = map.get(key) || {};
+                map.set(key, {
+                    id: key,
+                    password: (a.password !== undefined && a.password !== null) ? String(a.password) : (prev.password || ''),
+                    selectedServers: Array.isArray(a.selectedServers) ? a.selectedServers : (Array.isArray(prev.selectedServers) ? prev.selectedServers : []),
+                    userGroups: Array.isArray(a.userGroups) ? a.userGroups : (Array.isArray(prev.userGroups) ? prev.userGroups : undefined),
+                });
+            });
+            return Array.from(map.values());
+        }
+        adminAccounts = _dedupeAdminAccounts(adminAccounts);
+
+        async function loadAdminAccountsFromAPI() {
+            try {
+                const resp = await fetch(`${API_BASE_URL}/admin/account?t=${Date.now()}`, { method: 'GET' });
+                const data = await resp.json().catch(() => ({}));
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:loadAdminAccountsFromAPI',message:'admin_accounts_load',data:{status:resp.status,ok:!!resp.ok,count:(data.admins&&data.admins.length)||0,success:!!data.success},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix2',hypothesisId:'J'})}).catch(()=>{});
+                // #endregion
+                if (resp.ok && data.success && Array.isArray(data.admins)) {
+                    const existing = new Map((_dedupeAdminAccounts(adminAccounts)).map(a => [a.id, a]));
+                    data.admins.forEach(row => {
+                        const id = String((row && row.admin_id) || '').trim();
+                        if (!id) return;
+                        const prev = existing.get(id) || { id, password: '', selectedServers: [] };
+                        existing.set(id, { ...prev, id });
+                    });
+                    adminAccounts = _dedupeAdminAccounts(Array.from(existing.values()));
+                    try { localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts)); } catch { /* ignore */ }
+                }
+            } catch (e) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:loadAdminAccountsFromAPI',message:'admin_accounts_load_exception',data:{err:(e&&e.message||String(e)).slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix2',hypothesisId:'J'})}).catch(()=>{});
+                // #endregion
+            }
+        }
+
+        // 强制使用 Railway API (修复本地数据库连接问题)
+        const isLocalDev = false;  // 临时禁用本地开发模式
+        const API_BASE_URL = 'https://autosender.up.railway.app/api';  // 远程API地址
+        
+        // 如果需要使用本地API,取消下面的注释并注释掉上面的代码
+        // const isLocalDev = window.location.hostname === 'localhost' ||
+        //                   window.location.hostname === '127.0.0.1' ||
+        //                   window.location.hostname === '';
+        // const API_BASE_URL = isLocalDev
+        //     ? 'http://127.0.0.1:5000/api'  // 本地API地址（端口5000）
+        //     : 'https://autosender.up.railway.app/api';  // 远程API地址
 
         //console.log('API Base URL:', API_BASE_URL, '(Local Dev:', isLocalDev + ')');
 
@@ -8535,7 +8554,7 @@
             currentUserId = currentUserId || user_id;
             authToken = authToken || localStorage.getItem('auth_token');
 
-            loadServersFromAPI();
+            // loadServersFromAPI(); // 已在 init() 中调用，避免重复
             connectToBackendWS(null);
         }
 
@@ -8744,20 +8763,21 @@
                 return;
             }
 
-            adminAccounts.push({ id, password, selectedServers: [] });
-
             try {
-                localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
-            } catch (error) {
-                console.error('保存管理员账号到localStorage失败:', error);
-            }
-
-            try {
+                // 获取当前登录管理员的 token（从 localStorage）
+                const adminToken = localStorage.getItem('admin_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                // 如果有管理员 token，添加认证头
+                if (adminToken) {
+                    headers['Authorization'] = `Bearer ${adminToken}`;
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/admin/account`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         admin_id: id,
                         password: password
@@ -8765,10 +8785,47 @@
                 });
 
                 if (!response.ok) {
-                    console.warn('保存管理员账号到数据库失败，但已保存到本地');
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('保存管理员账号到数据库失败:', errorData.message || response.statusText);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:addAdminAccount',message:'admin_account_create_failed',data:{status:response.status,ok:!!response.ok,has_admin_token:!!adminToken,msg:(errorData.message||response.statusText||'').slice(0,160)},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix1',hypothesisId:'I'})}).catch(()=>{});
+                    // #endregion
+                    // 如果是 403 错误，提示用户需要先登录
+                    if (response.status === 403) {
+                        closeAddAdminModal();
+                        setTimeout(async () => {
+                            await customAlert('需要管理员权限才能添加新账号：请先用“管理员登录”获取 admin_token（仅输入服务器管理密码不够）');
+                        }, 300);
+                        return;
+                    }
+                    closeAddAdminModal();
+                    setTimeout(async () => {
+                        await customAlert(`保存失败：${errorData.message || response.statusText || '未知错误'}`);
+                    }, 300);
+                    return;
                 }
+                
+                // 成功后再落本地（避免“数据库失败但本地成功”的假同步）
+                adminAccounts.push({ id, password, selectedServers: [] });
+                try {
+                    localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+                } catch (error) {
+                    console.error('保存管理员账号到localStorage失败:', error);
+                }
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:addAdminAccount',message:'admin_account_create_ok',data:{status:response.status,has_admin_token:!!adminToken},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix1',hypothesisId:'I'})}).catch(()=>{});
+                // #endregion
             } catch (error) {
                 console.warn('无法连接到API服务器保存管理员账号，但已保存到本地:', error);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/661a1d3a-ec13-48f6-864e-98e22d2f8027',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WEB.html:addAdminAccount',message:'admin_account_create_exception',data:{err:(error&&error.message||String(error)).slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'admin-fix1',hypothesisId:'I'})}).catch(()=>{});
+                // #endregion
+                closeAddAdminModal();
+                setTimeout(async () => {
+                    await customAlert('无法连接到API保存管理员账号（未写入数据库），本次不会保存到本地以免造成不同步');
+                }, 300);
+                return;
             }
 
             closeAddAdminModal();
@@ -9841,7 +9898,7 @@
         async function loginAsManager(managerId) {
             const account = adminAccounts.find(a => a.id === managerId);
             if (!account) {
-                customAlert('管理员账户不存在');
+                await customAlert('管理员账户不存在');
                 return;
             }
 
@@ -9857,14 +9914,26 @@
             if (managerPage) {
                 managerPage.style.display = 'block';
                 managerPage.classList.add('show');
-                document.getElementById('managerIdDisplay').textContent = managerId;
-                const adminIndex = adminAccounts.findIndex(a => a.id === managerId);
-                document.getElementById('adminNumberDisplay').textContent = adminIndex >= 0 ? (adminIndex + 1) : '1';
+                
+                // 修复：检查元素是否存在
+                const managerIdDisplay = document.getElementById('managerIdDisplay');
+                if (managerIdDisplay) {
+                    managerIdDisplay.textContent = managerId;
+                }
+                
+                const adminNumberDisplay = document.getElementById('adminNumberDisplay');
+                if (adminNumberDisplay) {
+                    const adminIndex = adminAccounts.findIndex(a => a.id === managerId);
+                    adminNumberDisplay.textContent = adminIndex >= 0 ? (adminIndex + 1) : '1';
+                }
             } else {
                 console.error('找不到管理员页面元素 #managerPage');
-                customAlert('管理员页面加载失败，请刷新页面重试');
+                await customAlert('管理员页面加载失败，请刷新页面重试');
                 return;
             }
+
+      
+        
 
             if (!account.users) account.users = [];
             if (!account.userGroups) account.userGroups = [];
@@ -10654,6 +10723,7 @@
         }
 
         let updateManagerDisplayTimer = null;
+
         function updateManagerDisplay() {
             if (updateManagerDisplayTimer) {
                 clearTimeout(updateManagerDisplayTimer);
@@ -11030,6 +11100,9 @@
 
         const originalHandleAdminLogin = handleAdminLogin;
         handleAdminLogin = async function () {
+            // 统一走上面修复后的原始实现（会正确请求 /admin/login 且提交 admin_id 字段）
+            return await originalHandleAdminLogin();
+            /*
             const username = document.getElementById('adminLoginUsername').value.trim();
             const password = document.getElementById('adminLoginPassword').value.trim();
 
@@ -11101,6 +11174,7 @@
 
                 await doAdminLogin();
             }
+            */
         };
 
         window.handleAdminLogin = handleAdminLogin;
@@ -11144,15 +11218,15 @@
             return waiter;
         }
 
-                function connectToBackendWS(_serverIgnored) {
+        function connectToBackendWS(_serverIgnored) {
             // 零轮询架构：使用原生WebSocket实时推送，无任何HTTP轮询
-            if (activeWs && activeWs.readyState === WebSocket.OPEN) {
-                // console.log('[WebSocket] 已连接，跳过初始化');
+            if (activeWs && (activeWs.readyState === WebSocket.OPEN || activeWs.readyState === WebSocket.CONNECTING)) {
+                console.log('[WebSocket] 已连接或正在连接，跳过初始化');
                 return;
             }
 
             if (!authToken || !currentUserId) {
-                // console.warn('[WebSocket] 未登录，无法连接');
+                console.warn('[WebSocket] 未登录，无法连接');
                 return;
             }
 
@@ -11161,11 +11235,13 @@
                 .replace('http://', 'ws://')
                 .replace('https://', 'wss://')
                 .replace('/api', '') + '/ws/frontend';
-            // console.log('[WebSocket] 正在连接到:', wsUrl);
 
             try {
                 // 使用原生WebSocket客户端
                 activeWs = new WebSocket(wsUrl);
+                
+                // 心跳定时器
+                let heartbeatTimer = null;
 
                 activeWs.onopen = () => {
                     console.log('✓ WebSocket已连接');
@@ -11176,6 +11252,16 @@
                         sendWSCommand('subscribe_user', { user_id: currentUserId });
                         showMessage('已连接到实时推送服务', 'success');
                     }, 100);
+                    
+                    // 启动心跳 - 每30秒发送一次ping
+                    if (heartbeatTimer) {
+                        clearInterval(heartbeatTimer);
+                    }
+                    heartbeatTimer = setInterval(() => {
+                        if (activeWs && activeWs.readyState === WebSocket.OPEN) {
+                            sendWSCommand('ping', {});
+                        }
+                    }, 30000); // 30秒心跳
                 };
 
                 activeWs.onmessage = (event) => {
@@ -11183,7 +11269,7 @@
                         const msg = JSON.parse(event.data);
                         const msgType = msg.type;
                         
-                        // console.log('[WebSocket] 收到消息:', msgType, msg);
+                        console.log('[WebSocket] 收到消息:', msgType, msg);
 
                         // 处理不同类型的消息
                         if (msgType === 'task_update') {
@@ -11193,13 +11279,14 @@
                         } else if (msgType === 'inbox_update') {
                             handleServerMessage(msg, null);
                         } else if (msgType === 'subscribed') {
-                            // console.log('[WebSocket] 任务订阅成功:', msg);
+                            console.log('✓ 任务订阅成功:', msg.data || msg);
                         } else if (msgType === 'user_subscribed') {
                             console.log('✓ 用户订阅成功');
                         } else if (msgType === 'unsubscribed') {
                             // console.log('[WebSocket] 取消订阅:', msg);
                         } else if (msgType === 'pong') {
-                            // 心跳响应
+                            // 心跳响应 - 保持连接活跃
+                            console.log('✓ 心跳正常');
                         } else if (msgType === 'error') {
                             console.error('[WebSocket] 错误:', msg.message);
                         }
@@ -11215,6 +11302,13 @@
 
                 activeWs.onclose = (event) => {
                     // console.log('[WebSocket] 断开连接:', event.code, event.reason);
+                    
+                    // 清理心跳定时器
+                    if (heartbeatTimer) {
+                        clearInterval(heartbeatTimer);
+                        heartbeatTimer = null;
+                    }
+                    
                     activeWs = null;
                     
                     // 5秒后自动重连
